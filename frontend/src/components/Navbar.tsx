@@ -3,15 +3,15 @@ import { Link } from 'react-router';
 function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
-      <div className="mx-auto flex h-14 w-full items-center justify-between px-4">
+      <div className="mx-auto flex h-16 w-full max-w-screen-xl items-center px-6">
         <Link
           to="/"
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
         >
-          <img src="./travel-bag.svg" alt="Shield" className="h-5 w-5" />
-          <h1 className="m-0 h-5 text-lg font-semibold tracking-tight text-foreground leading-none">
+          <img src="./travel-bag.svg" alt="Hermes" className="h-6 w-6" />
+          <span className="text-xl font-semibold tracking-tight text-foreground leading-none">
             Hermes
-          </h1>
+          </span>
         </Link>
       </div>
     </header>
