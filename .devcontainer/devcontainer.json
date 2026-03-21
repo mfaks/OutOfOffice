@@ -5,6 +5,7 @@
       "context":".."
     },
     "forwardPorts": [8000, 5173],
+    "postCreateCommand": "cd frontend && npm install && cd .. && pre-commit install",
     "customizations": {
       "vscode": {
         "extensions": [
