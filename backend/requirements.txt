@@ -3,3 +3,8 @@ black
 ruff
 pre-commit
 pydantic
+pydantic-settings
+google-search-results
+pytest
+pytest-asyncio
+respx
