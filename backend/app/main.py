@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers import trip
+
 app = FastAPI()
+app.include_router(trip.router)
 
 origins = [
     "http://localhost:5173",

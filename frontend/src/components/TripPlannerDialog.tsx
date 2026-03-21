@@ -1,6 +1,8 @@
+import { useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ArrowUpRight, X } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Calendar } from './ui/calendar';
 import {
@@ -14,8 +16,11 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-
-type TripStyle = 'long' | 'short';
+import type {
+  TripPlannerRequest,
+  TripPlannerResponse,
+  TripStyle,
+} from '@/types/types';
 
 function HolidayChip({
   date,
@@ -47,6 +52,46 @@ export function TripPlannerDialog({
   const [holidays, setHolidays] = useState<Date[]>([]);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const { mutate, isPending, isError } = useMutation<
+    TripPlannerResponse,
+    Error,
+    TripPlannerRequest
+  >({
+    mutationFn: (body) =>
+      fetch('http://localhost:8000/trip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).then((res) => {
+        if (!res.ok) throw new Error('Request failed');
+        return res.json();
+      }),
+    onSuccess: () => {
+      toast.success('Trips planned!', {
+        description: "We've found the best windows for your PTO.",
+      });
+    },
+  });
+
+  function handleSubmit() {
+    const form = formRef.current;
+    if (!form?.reportValidity()) return;
+
+    const data = new FormData(form);
+    const pto = Number(data.get('pto'));
+    const budget = data.get('budget') as string;
+    mutate({
+      departure: data.get('departure') as string,
+      destination: data.get('destination') as string,
+      pto_days_remaining: Math.floor(pto),
+      max_flight_budget: budget
+        ? Number(budget.replace(/[^0-9.]/g, ''))
+        : undefined,
+      trip_style: tripStyle,
+      company_holidays: holidays.map((d) => format(d, 'yyyy-MM-dd')),
+    });
+  }
 
   function handleReset() {
     formRef.current?.reset();
@@ -90,6 +135,7 @@ export function TripPlannerDialog({
               </Label>
               <Input
                 id="departure"
+                name="departure"
                 placeholder="e.g. New York, JFK..."
                 required
               />
@@ -100,6 +146,7 @@ export function TripPlannerDialog({
               </Label>
               <Input
                 id="destination"
+                name="destination"
                 placeholder="e.g. Japan, Portugal..."
                 required
               />
@@ -108,12 +155,21 @@ export function TripPlannerDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="pto">PTO days remaining</Label>
-              <Input id="pto" type="number" placeholder="e.g. 10" />
+              <Label htmlFor="pto">
+                PTO days remaining <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="pto"
+                name="pto"
+                type="number"
+                placeholder="e.g. 10"
+                min={1}
+                required
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="budget">Max flight budget</Label>
-              <Input id="budget" placeholder="e.g. $800" />
+              <Input id="budget" name="budget" placeholder="e.g. $800" />
             </div>
           </div>
 
@@ -183,14 +239,25 @@ export function TripPlannerDialog({
               Used to find windows where holidays + weekends extend your PTO.
             </p>
           </div>
+          {isError && (
+            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              Something went wrong. Please try again.
+            </p>
+          )}
         </form>
 
         <DialogFooter>
           <Button variant="outline" size="lg" onClick={handleReset}>
             Reset
           </Button>
-          <Button className="flex-1" size="lg">
-            Find my trips <ArrowUpRight className="ml-1 h-4 w-4" />
+          <Button
+            className="flex-1"
+            size="lg"
+            disabled={isPending}
+            onClick={handleSubmit}
+          >
+            {isPending ? 'Planning…' : 'Find my trips'}{' '}
+            <ArrowUpRight className="ml-1 h-4 w-4" />
           </Button>
         </DialogFooter>
       </DialogContent>

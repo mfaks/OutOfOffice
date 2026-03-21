@@ -28,7 +28,7 @@ npm run format:check  # Prettier (check only, used in CI)
 ### Backend (run from `backend/`)
 
 ```bash
-fastapi dev main.py          # Dev server (hot reload)
+fastapi dev --host 0.0.0.0   # Dev server (hot reload, use --host 0.0.0.0 in dev container)
 python -m black .            # Format
 python -m ruff check .       # Lint
 python -m ruff check . --fix # Lint + auto-fix
@@ -49,7 +49,7 @@ Install dependencies: `pip install -r requirements.txt`
 
 ### Backend
 
-- `main.py` is the FastAPI entrypoint.
+- `app/main.py` is the FastAPI entrypoint. FastAPI auto-discovers it via `app/__init__.py`.
 - CORS is configured to allow requests from `http://localhost:5173` only.
 
 ### CI / Pre-commit
