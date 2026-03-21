@@ -12,6 +12,5 @@ def test_settings_loads_api_key(monkeypatch):
 
 def test_settings_missing_api_key(monkeypatch):
     monkeypatch.delenv("SERPAPI_API_KEY", raising=False)
-    # Also prevent it from reading the .env file
     with pytest.raises(ValidationError):
         Settings(_env_file=None)
