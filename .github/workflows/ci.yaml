@@ -73,6 +73,12 @@ jobs:
         working-directory: backend
         run: python -m compileall .
 
+      - name: Test backend
+        working-directory: backend
+        env:
+          SERPAPI_API_KEY: test-key
+        run: python -m pytest
+
   # Job that only runs when a PR was merged into main
   if_merged:
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
