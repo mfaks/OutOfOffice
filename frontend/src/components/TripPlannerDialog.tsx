@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ArrowUpRight, X } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { useNavigate } from 'react-router';
 import { Button } from './ui/button';
 import { Calendar } from './ui/calendar';
 import {
@@ -48,6 +48,7 @@ export function TripPlannerDialog({
 }: {
   triggerClassName?: string;
 }) {
+  const navigate = useNavigate();
   const [tripStyle, setTripStyle] = useState<TripStyle>('long');
   const [holidays, setHolidays] = useState<Date[]>([]);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -67,10 +68,8 @@ export function TripPlannerDialog({
         if (!res.ok) throw new Error('Request failed');
         return res.json();
       }),
-    onSuccess: () => {
-      toast.success('Trips planned!', {
-        description: "We've found the best windows for your PTO.",
-      });
+    onSuccess: (response) => {
+      navigate('/results', { state: { response } });
     },
   });
 
@@ -136,7 +135,7 @@ export function TripPlannerDialog({
               <Input
                 id="departure"
                 name="departure"
-                placeholder="e.g. New York, JFK..."
+                placeholder="Airport code, e.g. JFK"
                 required
               />
             </div>
@@ -147,7 +146,7 @@ export function TripPlannerDialog({
               <Input
                 id="destination"
                 name="destination"
-                placeholder="e.g. Japan, Portugal..."
+                placeholder="Airport code, e.g. NRT"
                 required
               />
             </div>

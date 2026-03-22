@@ -1,6 +1,5 @@
-from models import TripPlannerRequest
-
 from app.internal.agents.tools.flights import search_flights
+from app.internal.models import TripPlannerRequest
 
 
 async def travel_node(

@@ -11,7 +11,7 @@ export interface TripPlannerRequest {
 
 export interface FlightOption {
   airline: string;
-  estimated_cost_usd: number;
+  estimated_flight_cost: number;
   layovers: number;
   departs_at: string;
   returns_at: string;
@@ -32,6 +32,22 @@ export interface TripPlannerResponse {
   request: TripPlannerRequest;
   recommendations: TripRecommendation[];
   generated_at: string;
+}
+
+export interface RankConfig {
+  label: string;
+  rank: string;
+  headerBg: string;
+  badgeStyle: string;
+  priceStyle: string;
+  accentBar: string;
+  pillBg: string;
+}
+
+export interface StatPillProps {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  pillBg: string;
 }
 
 export type PlanningStatus = 'idle' | 'loading' | 'success' | 'error';
