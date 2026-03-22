@@ -16,11 +16,7 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import type {
-  TripPlannerRequest,
-  TripPlannerResponse,
-  TripStyle,
-} from '@/types/types';
+import type { TripPlannerRequest, TripPlannerResponse } from '@/types/types';
 
 function HolidayChip({
   date,
@@ -49,7 +45,6 @@ export function TripPlannerDialog({
   triggerClassName?: string;
 }) {
   const navigate = useNavigate();
-  const [tripStyle, setTripStyle] = useState<TripStyle>('long');
   const [holidays, setHolidays] = useState<Date[]>([]);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -87,14 +82,12 @@ export function TripPlannerDialog({
       max_flight_budget: budget
         ? Number(budget.replace(/[^0-9.]/g, ''))
         : undefined,
-      trip_style: tripStyle,
       company_holidays: holidays.map((d) => format(d, 'yyyy-MM-dd')),
     });
   }
 
   function handleReset() {
     formRef.current?.reset();
-    setTripStyle('long');
     setHolidays([]);
   }
 
@@ -169,26 +162,6 @@ export function TripPlannerDialog({
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="budget">Max flight budget</Label>
               <Input id="budget" name="budget" placeholder="e.g. $800" />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label>Trip style</Label>
-            <div className="flex gap-2">
-              <Button
-                variant={tripStyle === 'long' ? 'default' : 'outline'}
-                className="flex-1"
-                onClick={() => setTripStyle('long')}
-              >
-                One long trip
-              </Button>
-              <Button
-                variant={tripStyle === 'short' ? 'default' : 'outline'}
-                className="flex-1"
-                onClick={() => setTripStyle('short')}
-              >
-                A few shorter ones
-              </Button>
             </div>
           </div>
 

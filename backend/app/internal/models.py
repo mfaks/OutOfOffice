@@ -1,16 +1,14 @@
-from typing import Literal
+from typing import Literal, TypedDict
 
 from pydantic import BaseModel, Field
-
-TripStyle = Literal["long", "short"]
 
 
 class TripPlannerRequest(BaseModel):
     departure: str
     destination: str
     pto_days_remaining: int = Field(gt=0)
+    min_pto_days: int | None = None
     max_flight_budget: float | None = None
-    trip_style: TripStyle | None = None
     company_holidays: list[str] | None = None
 
 
@@ -34,6 +32,16 @@ class TripRecommendation(BaseModel):
 
 
 class TripPlannerResponse(BaseModel):
+    thread_id: str
     request: TripPlannerRequest
     recommendations: list[TripRecommendation]
     generated_at: str
+
+
+class TripState(TypedDict):
+    request: TripPlannerRequest
+    candidate_windows: list[dict]
+    enriched_windows: list[dict]
+    recommendations: list[TripRecommendation]
+    user_feedback: str | None
+    refinement_count: int

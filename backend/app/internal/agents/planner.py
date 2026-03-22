@@ -1,10 +1,10 @@
 from datetime import date, timedelta
 
 from app.internal.agents.tools.holidays import get_public_holidays
-from app.internal.models import TripPlannerRequest
+from app.internal.models import TripState
 
 
-async def planner_node(request: TripPlannerRequest) -> list[dict]:
+async def planner_node(state: TripState) -> dict:
     """
     Node 1 (API)
 
@@ -13,6 +13,8 @@ async def planner_node(request: TripPlannerRequest) -> list[dict]:
     Yield score = total_days_off / pto_days_used.
     Returns the top 5 windows to pass to the travel node.
     """
+
+    request = state["request"]
 
     year = date.today().year
     public_holidays = await get_public_holidays(country_code="US", year=year)
@@ -36,8 +38,11 @@ async def planner_node(request: TripPlannerRequest) -> list[dict]:
             if window:
                 windows.append(window)
 
+    if request.min_pto_days:
+        windows = [w for w in windows if w["pto_days_used"] >= request.min_pto_days]
+
     windows.sort(key=lambda w: w["yield_score"], reverse=True)
-    return windows[:5]
+    return {"candidate_windows": windows[:5]}
 
 
 def _score_window(

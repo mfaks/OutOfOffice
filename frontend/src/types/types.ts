@@ -1,11 +1,8 @@
-export type TripStyle = 'long' | 'short';
-
 export interface TripPlannerRequest {
   departure: string;
   destination: string;
   pto_days_remaining: number;
   max_flight_budget?: number;
-  trip_style?: TripStyle;
   company_holidays?: string[];
 }
 
@@ -29,6 +26,7 @@ export interface TripRecommendation {
 }
 
 export interface TripPlannerResponse {
+  thread_id: string;
   request: TripPlannerRequest;
   recommendations: TripRecommendation[];
   generated_at: string;

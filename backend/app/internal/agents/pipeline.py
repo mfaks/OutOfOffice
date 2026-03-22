@@ -1,26 +1,28 @@
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, StateGraph
+
+from app.internal.agents.feedback import feedback_node
 from app.internal.agents.planner import planner_node
 from app.internal.agents.ranker import ranker_node
 from app.internal.agents.travel import travel_node
-from app.internal.models import TripPlannerRequest, TripRecommendation
+from app.internal.models import TripState
 
 
-async def run_pipeline(request: TripPlannerRequest) -> list[TripRecommendation]:
-    """
-    Main entry point for the trip planning pipeline.
-    Node Chain: Planner -> Travel -> Ranker
-    Each node gets the output of the previous one.
-    """
-    # Step 1: score PTO windows using holidays
-    candidate_windows = await planner_node(request)
-    if not candidate_windows:
-        return []
+def build_graph():
+    g = StateGraph(TripState)
 
-    # Step 2: enrich windows with real flight data
-    enriched_windows = await travel_node(request, candidate_windows)
-    if not enriched_windows:
-        return []
+    g.add_node("interpreter", feedback_node)
+    g.add_node("planner", planner_node)
+    g.add_node("travel", travel_node)
+    g.add_node("ranker", ranker_node)
 
-    # Step 3: LLM ranks into top 3 with reasoning
-    recommendations = await ranker_node(request, enriched_windows)
+    g.set_entry_point("interpreter")
+    g.add_edge("interpreter", "planner")
+    g.add_edge("planner", "travel")
+    g.add_edge("travel", "ranker")
+    g.add_edge("ranker", END)
 
-    return recommendations
+    return g.compile(checkpointer=MemorySaver())
+
+
+graph = build_graph()

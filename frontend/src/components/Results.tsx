@@ -1,7 +1,10 @@
 import { ArrowRight, Plane } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
+import { toast } from 'sonner';
 import type { TripPlannerResponse } from '@/types/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { RecommendationCard } from './RecommendationCard';
 
 function Results() {
@@ -9,13 +12,45 @@ function Results() {
   const navigate = useNavigate();
   const response = location.state?.response as TripPlannerResponse | undefined;
 
+  const [recommendations, setRecommendations] = useState(
+    response?.recommendations ?? [],
+  );
+  const [threadId] = useState(response?.thread_id);
+  const [feedback, setFeedback] = useState('');
+  const [refining, setRefining] = useState(false);
+
   useEffect(() => {
     if (!response) navigate('/', { replace: true });
   }, [response, navigate]);
 
   if (!response) return null;
 
-  const { recommendations, request } = response;
+  const { request } = response;
+
+  async function handleRefine() {
+    if (!feedback.trim() || !threadId) return;
+    setRefining(true);
+    try {
+      const res = await fetch(
+        `http://localhost:8000/trips/${threadId}/feedback?feedback=${encodeURIComponent(feedback)}`,
+        {
+          method: 'POST',
+        },
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        const message =
+          body?.detail ?? 'Something went wrong. Please try again.';
+        toast.error(message, { duration: 6000 });
+        return;
+      }
+      const data: TripPlannerResponse = await res.json();
+      setRecommendations(data.recommendations);
+      setFeedback('');
+    } finally {
+      setRefining(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50/70">
@@ -46,9 +81,12 @@ function Results() {
         {recommendations.length === 0 ? (
           <div className="rounded-2xl bg-white border border-gray-100 shadow-sm px-8 py-16 text-center">
             <Plane className="h-10 w-10 mx-auto text-gray-200 mb-4" />
-            <p className="text-gray-500 font-medium">No trips found.</p>
+            <p className="text-gray-500 font-medium">
+              No flights found within your budget.
+            </p>
             <p className="text-sm text-gray-400 mt-1">
-              Try adjusting your budget or PTO days.
+              Try increasing your max flight budget or picking a different
+              destination.
             </p>
           </div>
         ) : (
@@ -58,6 +96,24 @@ function Results() {
             ))}
           </div>
         )}
+
+        <div className="mt-8 flex gap-2">
+          <Input
+            placeholder={
+              'Refine results — e.g. "find me cheaper options" or "I want a longer trip"'
+            }
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleRefine()}
+            disabled={refining}
+          />
+          <Button
+            onClick={handleRefine}
+            disabled={refining || !feedback.trim()}
+          >
+            {refining ? 'Refining…' : 'Refine'}
+          </Button>
+        </div>
       </div>
     </div>
   );

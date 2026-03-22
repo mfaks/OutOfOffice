@@ -1,11 +1,8 @@
 from app.internal.agents.tools.flights import search_flights
-from app.internal.models import TripPlannerRequest
+from app.internal.models import TripState
 
 
-async def travel_node(
-    request: TripPlannerRequest,
-    candidate_windows: list[dict],
-) -> list[dict]:
+async def travel_node(state: TripState) -> dict:
     """
     Node 2 (API)
 
@@ -14,6 +11,9 @@ async def travel_node(
     are found within the budget. Returns enriched windows
     with a best_flight attached to each.
     """
+
+    request = state["request"]
+    candidate_windows = state["candidate_windows"]
     enriched = []
 
     for window in candidate_windows:
@@ -36,4 +36,4 @@ async def travel_node(
             }
         )
 
-    return enriched
+    return {"enriched_windows": enriched}

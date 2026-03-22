@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 from app.config import settings
-from app.internal.models import TripPlannerRequest, TripRecommendation
+from app.internal.models import TripRecommendation, TripState
 
 RANKER_PROMPT = ChatPromptTemplate.from_messages(
     [
@@ -41,10 +41,7 @@ RANKER_PROMPT = ChatPromptTemplate.from_messages(
 )
 
 
-async def ranker_node(
-    request: TripPlannerRequest,
-    enriched_windows: list[dict],
-) -> list[TripRecommendation]:
+async def ranker_node(state: TripState) -> dict:
     """
     Node 3 (LLM)
 
@@ -52,8 +49,11 @@ async def ranker_node(
     to rank them into top 3, and parses the result into
     TripRecommendation objects to return to pipeline.py.
     """
+
+    request = state["request"]
+    enriched_windows = state["enriched_windows"]
     if not enriched_windows:
-        return []
+        return {"recommendations": []}
 
     llm = ChatOpenAI(model="gpt-4o", api_key=settings.openai_api_key)
 
@@ -66,4 +66,4 @@ async def ranker_node(
         }
     )
 
-    return [TripRecommendation(**r) for r in result]
+    return {"recommendations": [TripRecommendation(**r) for r in result]}

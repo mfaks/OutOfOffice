@@ -11,3 +11,4 @@ respx
 langchain
 langchain-core
 langchain-openai
+langgraph
