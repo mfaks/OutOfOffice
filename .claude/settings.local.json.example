@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/muhammad/Desktop/Hermes/.claude/run-checks.sh",
+            "command": ".claude/run-checks.sh",
             "timeout": 120,
             "statusMessage": "Running linters and build checks..."
           }

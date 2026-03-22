@@ -74,7 +74,7 @@ describe('AuthProvider', () => {
         error = e as Error;
       }
     });
-    expect(error?.message).toBe('Invalid credentials');
+    expect((error as Error | null)?.message).toBe('Invalid credentials');
   });
 
   it('logout clears user, token, and localStorage', async () => {
