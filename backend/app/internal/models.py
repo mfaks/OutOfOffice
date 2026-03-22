@@ -21,7 +21,7 @@ class FlightOption(BaseModel):
 
 
 class TripRecommendation(BaseModel):
-    rank: Literal[1, 2, 3]
+    rank: Literal[1, 2, 3, 4, 5]
     start_date: str
     end_date: str
     total_days_off: int

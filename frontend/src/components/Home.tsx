@@ -1,39 +1,84 @@
-import { CalendarDays, MapPin, Sparkles } from 'lucide-react';
+import { CalendarDays, MapPin, Search } from 'lucide-react';
 import { TripPlannerDialog } from './TripPlannerDialog';
-import { TypographyH1, TypographyLead } from './ui/typography';
+import {
+  TypographyH1,
+  TypographyH3,
+  TypographyLead,
+  TypographyMuted,
+  TypographySmall,
+} from './ui/typography';
 
-const features = [
-  { icon: CalendarDays, label: 'Reads your PTO calendar' },
-  { icon: Sparkles, label: 'AI finds optimal windows' },
-  { icon: MapPin, label: 'Suggests real destinations' },
+const steps = [
+  {
+    icon: CalendarDays,
+    title: 'Share your schedule',
+    description:
+      "Enter your PTO days, company holidays, and where you're flying from.",
+  },
+  {
+    icon: Search,
+    title: 'We find the windows',
+    description:
+      'Hermes scans for gaps where one PTO day turns into a 4- or 5-day weekend.',
+  },
+  {
+    icon: MapPin,
+    title: 'Book with confidence',
+    description:
+      'Get ranked trips with real flight estimates, travel dates, and efficiency scores.',
+  },
 ];
 
 function Home() {
   return (
-    <div className="relative flex min-h-[calc(100vh-4rem-3.5rem)] flex-col items-center justify-center overflow-hidden px-6 py-20">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-muted/60 via-transparent to-transparent" />
-      <div className="relative flex flex-col items-center gap-8 text-center max-w-3xl">
-        <TypographyH1 className="max-w-2xl">
-          Your next great trip is hiding in your calendar
-        </TypographyH1>
+    <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-6 py-8 text-center">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/2 top-0 h-[350px] w-[600px] -translate-x-1/2 rounded-full bg-primary/8 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-48 w-48 rounded-full bg-chart-2/10 blur-3xl" />
+      </div>
+
+      <div className="relative flex flex-col items-center gap-4 max-w-3xl w-full">
+        <TypographyH1>No PTO left behind.</TypographyH1>
+
         <TypographyLead className="max-w-lg">
-          Tell us your days off, where you want to go, and how many PTO days you
-          have left. Hermes finds the trips worth actually taking.
+          Hermes finds trips where your PTO goes furthest.
+          <br />
+          Real flights, real dates, real adventures.
         </TypographyLead>
-        <TripPlannerDialog triggerClassName="h-12 px-10 text-base rounded-xl" />
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 pt-2">
-          {features.map(({ icon: Icon, label }) => (
+
+        <TripPlannerDialog triggerClassName="mt-1 h-12 px-10 text-base rounded-full bg-primary text-primary-foreground font-semibold shadow-lg hover:opacity-90 hover:shadow-xl transition-all" />
+
+        <div className="mt-4 flex w-full items-center gap-4">
+          <div className="h-px flex-1 bg-border/60" />
+          <TypographySmall className="font-semibold uppercase tracking-widest text-muted-foreground">
+            How it works
+          </TypographySmall>
+          <div className="h-px flex-1 bg-border/60" />
+        </div>
+
+        <div className="grid w-full gap-4 sm:grid-cols-3">
+          {steps.map(({ icon: Icon, title, description }, i) => (
             <div
-              key={label}
-              className="flex items-center gap-2 text-sm text-muted-foreground"
+              key={title}
+              className="flex flex-col items-center gap-2.5 rounded-2xl border border-border/60 bg-card px-5 py-5 text-center shadow-sm"
             >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <Icon className="h-4.5 w-4.5 text-primary" />
+              </div>
+              <div>
+                <TypographyMuted className="mb-0.5 text-xs font-semibold uppercase tracking-widest">
+                  Step {i + 1}
+                </TypographyMuted>
+                <TypographyH3 className="text-base">{title}</TypographyH3>
+              </div>
+              <TypographyMuted className="leading-relaxed">
+                {description}
+              </TypographyMuted>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 

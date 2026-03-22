@@ -1,11 +1,50 @@
 import { ArrowRight, Plane } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import type { TripPlannerResponse } from '@/types/types';
+import type { TripPlannerResponse, TripRecommendation } from '@/types/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TypographyH1, TypographyMuted, TypographyP } from './ui/typography';
 import { RecommendationCard } from './RecommendationCard';
+
+type SortKey = 'rank' | 'price' | 'pto' | 'days' | 'layovers';
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: 'rank', label: 'Best match' },
+  { key: 'price', label: 'Lowest price' },
+  { key: 'pto', label: 'Least PTO' },
+  { key: 'days', label: 'Most days off' },
+  { key: 'layovers', label: 'Fewest layovers' },
+];
+
+function sortRecs(
+  recs: TripRecommendation[],
+  key: SortKey,
+): TripRecommendation[] {
+  const sorted = [...recs];
+  switch (key) {
+    case 'price':
+      sorted.sort(
+        (a, b) =>
+          a.best_flight.estimated_flight_cost -
+          b.best_flight.estimated_flight_cost,
+      );
+      break;
+    case 'pto':
+      sorted.sort((a, b) => a.pto_days_used - b.pto_days_used);
+      break;
+    case 'days':
+      sorted.sort((a, b) => b.total_days_off - a.total_days_off);
+      break;
+    case 'layovers':
+      sorted.sort((a, b) => a.best_flight.layovers - b.best_flight.layovers);
+      break;
+    default:
+      sorted.sort((a, b) => a.rank - b.rank);
+  }
+  return sorted;
+}
 
 function Results() {
   const location = useLocation();
@@ -18,6 +57,12 @@ function Results() {
   const [threadId] = useState(response?.thread_id);
   const [feedback, setFeedback] = useState('');
   const [refining, setRefining] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('rank');
+
+  const sorted = useMemo(
+    () => sortRecs(recommendations, sortKey),
+    [recommendations, sortKey],
+  );
 
   useEffect(() => {
     if (!response) navigate('/', { replace: true });
@@ -33,15 +78,13 @@ function Results() {
     try {
       const res = await fetch(
         `http://localhost:8000/trips/${threadId}/feedback?feedback=${encodeURIComponent(feedback)}`,
-        {
-          method: 'POST',
-        },
+        { method: 'POST' },
       );
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        const message =
-          body?.detail ?? 'Something went wrong. Please try again.';
-        toast.error(message, { duration: 6000 });
+        toast.error(body?.detail ?? 'Something went wrong. Please try again.', {
+          duration: 6000,
+        });
         return;
       }
       const data: TripPlannerResponse = await res.json();
@@ -53,19 +96,20 @@ function Results() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/70">
-      <div className="bg-white border-b border-gray-100">
-        <div className="mx-auto max-w-3xl px-6 py-6">
+    <div className="min-h-screen bg-background">
+      <div className="bg-background border-b border-border/40">
+        <div className="mx-auto max-w-3xl px-6 py-5">
           <div className="flex items-center gap-3 mb-1.5">
-            <Plane className="h-5 w-5 text-gray-300 shrink-0" />
-            <h1 className="flex items-center gap-2.5 text-2xl font-bold text-gray-900 tracking-tight">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+              <Plane className="h-4 w-4 text-primary shrink-0" />
+            </div>
+            <TypographyH1 className="flex items-center gap-2.5 text-2xl">
               <span>{request.departure}</span>
-              <ArrowRight className="h-4 w-4 text-gray-400 shrink-0" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
               <span>{request.destination}</span>
-            </h1>
+            </TypographyH1>
           </div>
-
-          <p className="ml-8 text-sm text-gray-400 font-medium">
+          <TypographyMuted className="ml-11 font-medium">
             {recommendations.length} trip
             {recommendations.length !== 1 ? 's' : ''} recommended
             {' · '}
@@ -73,25 +117,48 @@ function Results() {
             {request.max_flight_budget
               ? ` · $${request.max_flight_budget.toLocaleString()} max budget`
               : ''}
-          </p>
+          </TypographyMuted>
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-6 py-8">
+      <div className="mx-auto max-w-3xl px-6 py-6">
+        {recommendations.length > 0 && (
+          <div className="mb-5 flex items-center gap-2 flex-wrap">
+            <TypographyMuted className="text-xs font-semibold uppercase tracking-widest mr-1">
+              Sort by
+            </TypographyMuted>
+            {SORT_OPTIONS.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setSortKey(key)}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all ${
+                  sortKey === key
+                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                    : 'border-border/60 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {recommendations.length === 0 ? (
-          <div className="rounded-2xl bg-white border border-gray-100 shadow-sm px-8 py-16 text-center">
-            <Plane className="h-10 w-10 mx-auto text-gray-200 mb-4" />
-            <p className="text-gray-500 font-medium">
+          <div className="rounded-2xl bg-card border border-border shadow-sm px-8 py-16 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted mx-auto mb-4">
+              <Plane className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <TypographyP className="font-semibold text-lg">
               No flights found within your budget.
-            </p>
-            <p className="text-sm text-gray-400 mt-1">
+            </TypographyP>
+            <TypographyMuted className="mt-1.5">
               Try increasing your max flight budget or picking a different
               destination.
-            </p>
+            </TypographyMuted>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {recommendations.map((rec) => (
+            {sorted.map((rec) => (
               <RecommendationCard key={rec.rank} rec={rec} />
             ))}
           </div>
@@ -99,15 +166,15 @@ function Results() {
 
         <div className="mt-8 flex gap-2">
           <Input
-            placeholder={
-              'Refine results — e.g. "find me cheaper options" or "I want a longer trip"'
-            }
+            className="bg-card border-border rounded-xl"
+            placeholder='Refine results — e.g. "find me cheaper options" or "I want a longer trip"'
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleRefine()}
             disabled={refining}
           />
           <Button
+            className="rounded-xl bg-primary text-primary-foreground hover:opacity-90"
             onClick={handleRefine}
             disabled={refining || !feedback.trim()}
           >

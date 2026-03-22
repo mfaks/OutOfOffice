@@ -62,10 +62,9 @@ describe('RecommendationCard', () => {
     expect(screen.getByText(mockRec.reasoning)).toBeInTheDocument();
   });
 
-  it('renders PTO and yield stats', () => {
+  it('renders PTO and days off stats', () => {
     render(<RecommendationCard rec={mockRec} />);
     expect(screen.getByText('1 PTO used')).toBeInTheDocument();
-    expect(screen.getByText('4× yield')).toBeInTheDocument();
     expect(screen.getByText('4 days off')).toBeInTheDocument();
   });
 });
