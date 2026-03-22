@@ -12,3 +12,8 @@ langchain
 langchain-core
 langchain-openai
 langgraph
+sqlmodel
+psycopg2-binary
+alembic
+python-jose[cryptography]
+bcrypt

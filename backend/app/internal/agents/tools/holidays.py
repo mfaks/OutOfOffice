@@ -4,17 +4,10 @@ NAGER_API_BASE = "https://date.nager.at/api/v3"
 
 
 async def get_public_holidays(country_code: str, year: int) -> list[dict]:
-    """Fetch global public holidays for a given country and year.
-
-    Uses the Nager.Date API and filters to only holidays marked as global
-    (i.e., observed nationwide, not just regionally).
-
-    Args:
-        country_code: ISO 3166-year1 alpha-2 country code (e.g. "US", "GB").
-        year: The calendar  to fetch holidays for.
-
-    Returns:
-        A list of dicts with "name" and "date" (ISO 8601 string) keys.
+    """
+    Fetch public holidays for a given country and year via the Nager.Date API.
+    Filters to only holidays marked as global (observed nationwide, not regionally).
+    Returns a list of dicts with "name" and "date" (ISO 8601 string) keys.
     """
     url = f"{NAGER_API_BASE}/PublicHolidays/{year}/{country_code}"
 

@@ -5,7 +5,7 @@ from app.internal.agents.feedback import feedback_node
 from app.internal.agents.planner import planner_node
 from app.internal.agents.ranker import ranker_node
 from app.internal.agents.travel import travel_node
-from app.internal.models import TripState
+from app.schemas.trip import TripState
 
 
 def build_graph():

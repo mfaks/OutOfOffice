@@ -50,6 +50,23 @@ export interface StatPillProps {
 
 export type PlanningStatus = 'idle' | 'loading' | 'success' | 'error';
 
+export interface AuthUser {
+  email: string;
+}
+
+export interface AuthContextValue {
+  user: AuthUser | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    first_name: string,
+    last_name: string,
+  ) => Promise<void>;
+  logout: () => void;
+}
+
 export interface TripPlannerUIState {
   status: PlanningStatus;
   response: TripPlannerResponse | null;

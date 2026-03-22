@@ -190,7 +190,10 @@ export function TripPlannerDialog({
           </TypographyMuted>
         </DialogHeader>
 
-        <form ref={formRef} className="flex flex-col gap-5 py-1">
+        <form
+          ref={formRef}
+          className="flex flex-col gap-5 py-1 overflow-y-auto max-h-[65vh] pr-0.5"
+        >
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="departure">

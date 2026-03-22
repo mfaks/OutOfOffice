@@ -1,2 +1,4 @@
 __pycache__
+.pytestcache
 .ruff_cache
+.env

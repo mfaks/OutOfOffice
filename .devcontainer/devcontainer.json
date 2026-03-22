@@ -5,7 +5,8 @@
       "context":".."
     },
     "forwardPorts": [8000, 5173],
-    "postCreateCommand": "cd frontend && npm install && cd .. && pre-commit install",
+    "postCreateCommand": "cd frontend && npm install && cd .. && pre-commit install && service postgresql start && su postgres -c \"createdb hermes 2>/dev/null || true\" && { [ -f backend/.env ] || cp backend/.env.example backend/.env; } && set -a && . backend/.env && set +a && su postgres -c \"psql -c \\\"ALTER USER $POSTGRES_USER PASSWORD '$POSTGRES_PASSWORD';\\\"\"",
+    "postStartCommand": "service postgresql start",
     "customizations": {
       "vscode": {
         "extensions": [
@@ -14,8 +15,7 @@
           "ms-azuretools.vscode-docker",
           "esbenp.prettier-vscode",
           "dbaeumer.vscode-eslint",
-          "GitHub.vscode-pull-request-github",
-          "openai.chatgpt"
+          "GitHub.vscode-pull-request-github"
         ]
       }
     }

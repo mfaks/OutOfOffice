@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 from app.config import settings
-from app.internal.models import TripRecommendation, TripState
+from app.schemas.trip import TripRecommendation, TripState
 
 RANKER_PROMPT = ChatPromptTemplate.from_messages(
     [
