@@ -15,7 +15,7 @@ export interface FlightOption {
 }
 
 export interface TripRecommendation {
-  rank: 1 | 2 | 3;
+  rank: 1 | 2 | 3 | 4 | 5;
   start_date: string;
   end_date: string;
   total_days_off: number;

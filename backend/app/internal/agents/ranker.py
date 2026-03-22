@@ -14,14 +14,14 @@ RANKER_PROMPT = ChatPromptTemplate.from_messages(
             """You are a travel planning assistant. You will be given a list of
         candidate trip windows, each enriched with real flight data.
 
-        Rank the top 3 by weighing these factors:
+        Rank the top 5 by weighing these factors:
         - yield_score: higher is better (more days off per PTO day spent)
         - estimated_flight_cost: lower is better
         - layovers: fewer is better
 
-        Return ONLY a valid JSON array of exactly 3 objects.
+        Return ONLY a valid JSON array of exactly 5 objects.
         Each object must have these exact fields:
-        - rank: integer (1, 2, or 3)
+        - rank: integer (1, 2, 3, 4, or 5)
         - start_date: string (YYYY-MM-DD)
         - end_date: string (YYYY-MM-DD)
         - total_days_off: integer
