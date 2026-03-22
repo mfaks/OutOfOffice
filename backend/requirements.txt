@@ -8,3 +8,6 @@ google-search-results
 pytest
 pytest-asyncio
 respx
+langchain
+langchain-core
+langchain-openai

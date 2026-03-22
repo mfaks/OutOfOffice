@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
     serpapi_api_key: str
+    openai_api_key: str
 
 
 settings = Settings()
