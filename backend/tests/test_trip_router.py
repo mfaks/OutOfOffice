@@ -1,7 +1,7 @@
 from contextlib import ExitStack
 from unittest.mock import AsyncMock, patch
 
-from app.internal.models import FlightOption, TripPlannerRequest, TripRecommendation
+from app.schemas.trip import FlightOption, TripPlannerRequest, TripRecommendation
 from tests.conftest import VALID_TRIP_REQUEST
 
 MOCK_RECOMMENDATION = TripRecommendation(

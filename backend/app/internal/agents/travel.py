@@ -1,5 +1,5 @@
 from app.internal.agents.tools.flights import search_flights
-from app.internal.models import TripState
+from app.schemas.trip import TripState
 
 
 async def travel_node(state: TripState) -> dict:

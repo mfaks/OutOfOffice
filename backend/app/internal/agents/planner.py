@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from app.internal.agents.tools.holidays import get_public_holidays
-from app.internal.models import TripState
+from app.schemas.trip import TripState
 
 
 async def planner_node(state: TripState) -> dict:

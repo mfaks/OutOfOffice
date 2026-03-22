@@ -6,6 +6,7 @@ import './index.css';
 import App from './App.tsx';
 import { Toaster } from './components/ui/sonner.tsx';
 import { ThemeProvider } from './components/ThemeProvider.tsx';
+import { AuthProvider } from './context/AuthContext.tsx';
 
 const queryClient = new QueryClient();
 
@@ -14,8 +15,10 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ThemeProvider>
-          <App />
-          <Toaster position="bottom-center" richColors />
+          <AuthProvider>
+            <App />
+            <Toaster position="bottom-center" richColors />
+          </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>

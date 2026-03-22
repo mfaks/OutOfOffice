@@ -1,10 +1,26 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import SQLModel
 
-from app.routers import trip
+from app.db.session import engine
+from app.routers import auth, trip
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    try:
+        SQLModel.metadata.create_all(engine)
+    except Exception as e:
+        print(f"WARNING: Could not connect to database on startup: {e}")
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+app.include_router(auth.router)
 app.include_router(trip.router)
+
 
 origins = [
     "http://localhost:5173",

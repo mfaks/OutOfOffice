@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 from app.config import settings
-from app.internal.models import TripPlannerRequest, TripState
+from app.schemas.trip import TripPlannerRequest, TripState
 
 INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
     [
@@ -42,9 +42,12 @@ INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
 
 async def feedback_node(state: TripState) -> dict:
     """
+    Node 0 (LLM)
+
     Interprets freetext user feedback and returns updated request constraints.
     Increments refinement_count so the graph can cap feedback loops if needed.
     """
+
     feedback = state.get("user_feedback")
     if not feedback:
         return {}
