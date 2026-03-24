@@ -18,6 +18,7 @@ const mockRec: TripRecommendation = {
     returns_at: '2026-09-06T10:50:00',
   },
   reasoning: 'This window has the lowest estimated flight cost.',
+  itinerary: [],
 };
 
 describe('RecommendationCard', () => {

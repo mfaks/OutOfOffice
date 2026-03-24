@@ -1,13 +1,15 @@
 import { format, parseISO } from 'date-fns';
 import {
-  Bookmark,
   Calendar,
-  Check,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
   Clock,
   ExternalLink,
   Plane,
   Sparkles,
 } from 'lucide-react';
+import { useState } from 'react';
 import type {
   RankConfig,
   StatPillProps,
@@ -73,16 +75,11 @@ const RANK_CONFIG: Record<number, RankConfig> = {
 export function RecommendationCard({
   rec,
   searchUrl,
-  onSave,
-  isSaving,
-  isSaved,
 }: {
   rec: TripRecommendation;
   searchUrl?: string;
-  onSave?: () => void;
-  isSaving?: boolean;
-  isSaved?: boolean;
 }) {
+  const [itineraryOpen, setItineraryOpen] = useState(false);
   const config = RANK_CONFIG[rec.rank] ?? RANK_CONFIG[3];
   const start = format(parseISO(rec.start_date), 'MMM d');
   const end = format(parseISO(rec.end_date), 'MMM d, yyyy');
@@ -183,38 +180,17 @@ export function RecommendationCard({
           </div>
         </div>
 
-        {(searchUrl || onSave) && (
-          <div className="ml-9 mt-3 flex items-center gap-2">
-            {searchUrl && (
-              <a
-                href={searchUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
-              >
-                Search on Kayak
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            )}
-            {onSave && (
-              <button
-                onClick={onSave}
-                disabled={isSaving || isSaved}
-                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSaved ? (
-                  <>
-                    Saved
-                    <Check className="h-3 w-3" />
-                  </>
-                ) : (
-                  <>
-                    {isSaving ? 'Saving…' : 'Save trip'}
-                    <Bookmark className="h-3 w-3" />
-                  </>
-                )}
-              </button>
-            )}
+        {searchUrl && (
+          <div className="ml-9 mt-3">
+            <a
+              href={searchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+            >
+              Search on Kayak
+              <ExternalLink className="h-3 w-3" />
+            </a>
           </div>
         )}
       </div>
@@ -227,6 +203,58 @@ export function RecommendationCard({
           {rec.reasoning}
         </p>
       </div>
+
+      {rec.itinerary && rec.itinerary.length > 0 && (
+        <>
+          <div className="h-px bg-border/50 ml-8 mr-6" />
+          <div className="pl-8 pr-6 py-3">
+            <button
+              type="button"
+              onClick={() => setItineraryOpen((o) => !o)}
+              className="flex w-full items-center justify-between text-sm font-semibold text-foreground hover:text-primary transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary/70" />
+                Day-by-day itinerary
+              </span>
+              {itineraryOpen ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+
+            {itineraryOpen && (
+              <div className="mt-3 flex flex-col gap-4">
+                {rec.itinerary.map((day) => (
+                  <div key={day.date}>
+                    <div className="flex items-baseline gap-2 mb-1.5">
+                      <span className="text-xs font-semibold text-foreground">
+                        {format(parseISO(day.date), 'EEE, MMM d')}
+                      </span>
+                      {day.note && (
+                        <span className="text-xs text-muted-foreground">
+                          {day.note}
+                        </span>
+                      )}
+                    </div>
+                    <ul className="flex flex-col gap-1 ml-1">
+                      {day.activities.map((activity, i) => (
+                        <li
+                          key={i}
+                          className="text-xs text-muted-foreground leading-relaxed"
+                        >
+                          {activity}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

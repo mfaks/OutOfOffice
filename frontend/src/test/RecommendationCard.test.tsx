@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { RecommendationCard } from '../components/RecommendationCard';
 import type { TripRecommendation } from '../types/types';
 
@@ -19,6 +18,7 @@ const REC: TripRecommendation = {
     returns_at: '2026-07-08T18:00:00',
   },
   reasoning: 'Great summer timing with low cost.',
+  itinerary: [],
 };
 
 describe('RecommendationCard', () => {
@@ -88,38 +88,5 @@ describe('RecommendationCard', () => {
     const link = screen.getByRole('link', { name: /search on kayak/i });
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
-  });
-
-  it('does not render save trip button when onSave is not provided', () => {
-    render(<RecommendationCard rec={REC} />);
-    expect(
-      screen.queryByRole('button', { name: /save trip/i }),
-    ).not.toBeInTheDocument();
-  });
-
-  it('renders save trip button when onSave is provided', () => {
-    render(<RecommendationCard rec={REC} onSave={vi.fn()} />);
-    expect(
-      screen.getByRole('button', { name: /save trip/i }),
-    ).toBeInTheDocument();
-  });
-
-  it('calls onSave when save trip button is clicked', async () => {
-    const onSave = vi.fn();
-    render(<RecommendationCard rec={REC} onSave={onSave} />);
-    await userEvent.click(screen.getByRole('button', { name: /save trip/i }));
-    expect(onSave).toHaveBeenCalledTimes(1);
-  });
-
-  it('disables save trip button when isSaving is true', () => {
-    render(<RecommendationCard rec={REC} onSave={vi.fn()} isSaving />);
-    expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
-  });
-
-  it('shows saved state and disables button when isSaved is true', () => {
-    render(<RecommendationCard rec={REC} onSave={vi.fn()} isSaved />);
-    const btn = screen.getByRole('button', { name: /saved/i });
-    expect(btn).toBeInTheDocument();
-    expect(btn).toBeDisabled();
   });
 });

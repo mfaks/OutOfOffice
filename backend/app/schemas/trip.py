@@ -30,6 +30,12 @@ class FlightOption(BaseModel):
     returns_at: str
 
 
+class DayItinerary(BaseModel):
+    date: str
+    note: str
+    activities: list[str]
+
+
 class TripRecommendation(BaseModel):
     rank: Literal[1, 2, 3, 4, 5]
     start_date: str
@@ -39,6 +45,7 @@ class TripRecommendation(BaseModel):
     yield_score: float
     best_flight: FlightOption
     reasoning: str
+    itinerary: list[DayItinerary] = []
 
 
 class TripPlannerResponse(BaseModel):

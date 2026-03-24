@@ -1,13 +1,10 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowUpRight } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useAuth } from '@/context/AuthContext';
 import type {
   TripPlannerRequest,
   TripPlannerResponse,
   TripPriority,
-  UserPreferences,
 } from '@/types/types';
 import { HolidayPicker } from './HolidayPicker';
 import { Button } from './ui/button';
@@ -69,7 +66,6 @@ export function TripPlannerDialog({
   triggerLabel?: string;
 }) {
   const navigate = useNavigate();
-  const { token } = useAuth();
 
   const [departure, setDeparture] = useState('');
   const [destination, setDestination] = useState('');
@@ -78,68 +74,12 @@ export function TripPlannerDialog({
   const [holidays, setHolidays] = useState<Date[]>([]);
   const [preferredMonths, setPreferredMonths] = useState<number[]>([]);
   const [priority, setPriority] = useState<TripPriority>('best_yield');
+  const [isPending, setIsPending] = useState(false);
+  const [isError, setIsError] = useState(false);
 
-  const { data: prefs } = useQuery<UserPreferences>({
-    queryKey: ['preferences'],
-    enabled: !!token,
-    staleTime: Infinity,
-    queryFn: () =>
-      fetch('http://localhost:8000/me/preferences', {
-        headers: { Authorization: `Bearer ${token}` },
-      }).then((res) => res.json()),
-  });
-
-  useEffect(() => {
-    if (!prefs) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (prefs.default_departure) setDeparture(prefs.default_departure);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (prefs.default_destination) setDestination(prefs.default_destination);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (prefs.pto_days_remaining != null)
-      setPto(String(prefs.pto_days_remaining));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (prefs.max_flight_budget != null)
-      setBudget(String(prefs.max_flight_budget));
-    if (prefs.company_holidays.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHolidays(
-        prefs.company_holidays.map((s) => {
-          const [y, m, d] = s.split('-').map(Number);
-          return new Date(y, m - 1, d);
-        }),
-      );
-    }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (prefs.preferred_months.length > 0)
-      setPreferredMonths(prefs.preferred_months);
-  }, [prefs]);
-
-  const { mutate, isPending, isError } = useMutation<
-    TripPlannerResponse,
-    Error,
-    TripPlannerRequest
-  >({
-    mutationFn: (body) =>
-      fetch('http://localhost:8000/trip', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(body),
-      }).then((res) => {
-        if (!res.ok) throw new Error('Request failed');
-        return res.json();
-      }),
-    onSuccess: (response) => {
-      navigate('/results', { state: { response } });
-    },
-  });
-
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!departure.trim() || !destination.trim() || !pto) return;
-    mutate({
+    const body: TripPlannerRequest = {
       departure: departure.trim(),
       destination: destination.trim(),
       pto_days_remaining: Math.floor(Number(pto)),
@@ -155,7 +95,23 @@ export function TripPlannerDialog({
       preferred_months:
         preferredMonths.length > 0 ? preferredMonths : undefined,
       priority,
-    });
+    };
+    setIsPending(true);
+    setIsError(false);
+    try {
+      const res = await fetch('http://localhost:8000/trip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error('Request failed');
+      const response: TripPlannerResponse = await res.json();
+      navigate('/results', { state: { response } });
+    } catch {
+      setIsError(true);
+    } finally {
+      setIsPending(false);
+    }
   }
 
   function handleReset() {

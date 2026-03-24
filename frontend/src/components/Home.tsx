@@ -1,9 +1,5 @@
 import { CalendarDays, MapPin, Search } from 'lucide-react';
-import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import AuthDialog from './AuthDialog';
 import { TripPlannerDialog } from './TripPlannerDialog';
-import { Button } from './ui/button';
 import {
   TypographyH1,
   TypographyH3,
@@ -34,9 +30,6 @@ const steps = [
 ];
 
 function Home() {
-  const { user } = useAuth();
-  const [authOpen, setAuthOpen] = useState(false);
-
   return (
     <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-6 py-8 text-center">
       <div className="pointer-events-none absolute inset-0">
@@ -53,37 +46,12 @@ function Home() {
           Real flights, real dates, real adventures.
         </TypographyLead>
 
-        {user ? (
-          <div className="mt-1 flex flex-col items-center gap-2">
-            <TripPlannerDialog
-              triggerClassName="h-12 px-10 text-base rounded-full bg-primary text-primary-foreground font-semibold shadow-lg hover:opacity-90 hover:shadow-xl transition-all"
-              triggerLabel="✈️ Find my flight"
-            />
-            <TypographySmall className="text-muted-foreground">
-              Signed in as {user.email}
-            </TypographySmall>
-          </div>
-        ) : (
-          <div className="mt-1 flex flex-col items-center gap-3">
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <TripPlannerDialog
-                triggerClassName="h-14 px-12 text-lg rounded-full font-semibold border-2 border-primary/40 bg-transparent text-primary hover:bg-primary/10 transition-all"
-                triggerLabel="Try Demo"
-              />
-              <Button
-                size="lg"
-                className="h-14 px-12 text-lg rounded-full font-semibold shadow-lg hover:opacity-90 hover:shadow-xl transition-all"
-                onClick={() => setAuthOpen(true)}
-              >
-                Get Started
-              </Button>
-            </div>
-            <TypographySmall className="text-muted-foreground">
-              Create a free account to save results and unlock 3 searches per
-              day.
-            </TypographySmall>
-          </div>
-        )}
+        <div className="mt-1 flex flex-col items-center gap-2">
+          <TripPlannerDialog
+            triggerClassName="h-14 px-12 text-lg rounded-full font-semibold shadow-lg hover:opacity-90 hover:shadow-xl transition-all"
+            triggerLabel="Plan my trip"
+          />
+        </div>
 
         <div className="mt-4 flex w-full items-center gap-4">
           <div className="h-px flex-1 bg-border/60" />
@@ -115,8 +83,6 @@ function Home() {
           ))}
         </div>
       </div>
-
-      <AuthDialog open={authOpen} onClose={() => setAuthOpen(false)} />
     </section>
   );
 }
