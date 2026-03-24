@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Account from '../components/Account';
 import { AuthProvider } from '../context/AuthContext';
+import type { SavedTripListRead } from '../types/types';
 
 function makeClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -37,9 +38,12 @@ const EMPTY_PREFS = {
   preferred_months: [],
 };
 
-const EMPTY_TRIPS = { trips: [], pto_days_remaining: null };
+const EMPTY_TRIPS: SavedTripListRead = { trips: [], pto_days_remaining: null };
 
-function mockFetch(prefsBody = EMPTY_PREFS, tripsBody = EMPTY_TRIPS) {
+function mockFetch(
+  prefsBody = EMPTY_PREFS,
+  tripsBody: SavedTripListRead = EMPTY_TRIPS,
+) {
   vi.spyOn(global, 'fetch').mockImplementation((url) => {
     const u = String(url);
     if (u.includes('/me/trips')) {
