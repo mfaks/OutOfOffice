@@ -1,8 +1,14 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, Plane } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import type { TripPlannerResponse, TripRecommendation } from '@/types/types';
+import type {
+  SavedTrip,
+  TripPlannerResponse,
+  TripRecommendation,
+} from '@/types/types';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TypographyH1, TypographyMuted, TypographyP } from './ui/typography';
@@ -49,6 +55,8 @@ function sortRecs(
 function Results() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
   const response = location.state?.response as TripPlannerResponse | undefined;
 
   const [recommendations, setRecommendations] = useState(
@@ -58,6 +66,8 @@ function Results() {
   const [feedback, setFeedback] = useState('');
   const [refining, setRefining] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('rank');
+  const [savedRanks, setSavedRanks] = useState<Set<number>>(new Set());
+  const [savingRank, setSavingRank] = useState<number | null>(null);
 
   const sorted = useMemo(
     () => sortRecs(recommendations, sortKey),
@@ -78,7 +88,10 @@ function Results() {
     try {
       const res = await fetch(
         `http://localhost:8000/trips/${threadId}/feedback?feedback=${encodeURIComponent(feedback)}`,
-        { method: 'POST' },
+        {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
       );
       if (!res.ok) {
         const body = await res.json().catch(() => null);
@@ -92,6 +105,40 @@ function Results() {
       setFeedback('');
     } finally {
       setRefining(false);
+    }
+  }
+
+  async function handleSave(rec: TripRecommendation) {
+    if (!token) {
+      toast.error('Sign in to save trips');
+      return;
+    }
+    setSavingRank(rec.rank);
+    try {
+      const res = await fetch('http://localhost:8000/me/trips', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          departure: request.departure,
+          destination: request.destination,
+          recommendation: rec,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        toast.error(body?.detail ?? 'Failed to save trip');
+        return;
+      }
+      const saved: SavedTrip = await res.json();
+      setSavedRanks((prev) => new Set(prev).add(rec.rank));
+      queryClient.invalidateQueries({ queryKey: ['preferences'] });
+      queryClient.invalidateQueries({ queryKey: ['saved-trips'] });
+      navigate(`/trips/${saved.id}`);
+    } finally {
+      setSavingRank(null);
     }
   }
 
@@ -159,7 +206,14 @@ function Results() {
         ) : (
           <div className="flex flex-col gap-4">
             {sorted.map((rec) => (
-              <RecommendationCard key={rec.rank} rec={rec} />
+              <RecommendationCard
+                key={rec.rank}
+                rec={rec}
+                searchUrl={`https://www.kayak.com/flights/${request.departure}-${request.destination}/${rec.start_date}/${rec.end_date}`}
+                onSave={() => handleSave(rec)}
+                isSaving={savingRank === rec.rank}
+                isSaved={savedRanks.has(rec.rank)}
+              />
             ))}
           </div>
         )}

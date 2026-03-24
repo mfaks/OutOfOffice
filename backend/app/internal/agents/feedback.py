@@ -27,6 +27,9 @@ INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
           e.g. "longer trip" → 3, "at least a week" → 5)
         - destination: string (change if user wants a different place)
         - departure: string (change if user wants to leave from elsewhere)
+        - preferred_months: list[int] (1-12; set when user specifies months or
+          seasons, e.g. "summer" → [6,7,8], "spring" → [3,4,5],
+          "fall" → [9,10,11], "winter" → [12,1,2]; null to clear)
 
         Only include fields that should actually change. If nothing needs to
         change, return {{}}.
@@ -41,12 +44,8 @@ INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
 
 
 async def feedback_node(state: TripState) -> dict:
-    """
-    Node 0 (LLM)
-
-    Interprets freetext user feedback and returns updated request constraints.
-    Increments refinement_count so the graph can cap feedback loops if needed.
-    """
+    """Parse freetext feedback into updated request constraints and increment
+    refinement_count."""
 
     feedback = state.get("user_feedback")
     if not feedback:

@@ -4,11 +4,7 @@ NAGER_API_BASE = "https://date.nager.at/api/v3"
 
 
 async def get_public_holidays(country_code: str, year: int) -> list[dict]:
-    """
-    Fetch public holidays for a given country and year via the Nager.Date API.
-    Filters to only holidays marked as global (observed nationwide, not regionally).
-    Returns a list of dicts with "name" and "date" (ISO 8601 string) keys.
-    """
+    """Fetch public holidays from the Nager.Date API as {name, date} dicts."""
     url = f"{NAGER_API_BASE}/PublicHolidays/{year}/{country_code}"
 
     async with httpx.AsyncClient() as client:

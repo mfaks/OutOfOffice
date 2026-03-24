@@ -35,6 +35,12 @@ function Navbar() {
               <span className="text-sm text-muted-foreground hidden sm:block">
                 {user.email}
               </span>
+              <Link
+                to="/account"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+              >
+                Account
+              </Link>
               <Button
                 variant="outline"
                 size="sm"

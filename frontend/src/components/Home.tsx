@@ -57,7 +57,7 @@ function Home() {
           <div className="mt-1 flex flex-col items-center gap-2">
             <TripPlannerDialog
               triggerClassName="h-12 px-10 text-base rounded-full bg-primary text-primary-foreground font-semibold shadow-lg hover:opacity-90 hover:shadow-xl transition-all"
-              triggerLabel="✈️ Plan my trip"
+              triggerLabel="✈️ Find my flight"
             />
             <TypographySmall className="text-muted-foreground">
               Signed in as {user.email}

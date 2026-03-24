@@ -1,32 +1,23 @@
 from datetime import date, timedelta
 
 from app.internal.agents.tools.holidays import get_public_holidays
-from app.schemas.trip import TripState
+from app.schemas.trip import TripPriority, TripState
 
 
 async def planner_node(state: TripState) -> dict:
-    """
-    Node 1 (API)
-
-    Fetches public holidays, combines them with company holidays,
-    then scores every possible PTO window by yield score.
-    Yield score = total_days_off / pto_days_used.
-    Returns the top 5 windows to pass to the travel node.
-    """
+    """Score every PTO window by yield (days_off / pto_used) and return the top 5."""
 
     request = state["request"]
 
     year = date.today().year
     public_holidays = await get_public_holidays(country_code="US", year=year)
 
-    # combine the public holidays and company holidays into one set
     all_holidays: set[str] = set()
     for h in public_holidays:
         all_holidays.add(h["date"])
     for h in request.company_holidays or []:
         all_holidays.add(h)
 
-    # score every window within the PTO budget
     windows = []
     today = date.today()
     year_end = date(year, 12, 31)
@@ -41,8 +32,27 @@ async def planner_node(state: TripState) -> dict:
     if request.min_pto_days:
         windows = [w for w in windows if w["pto_days_used"] >= request.min_pto_days]
 
-    windows.sort(key=lambda w: w["yield_score"], reverse=True)
-    return {"candidate_windows": windows[:5]}
+    if request.preferred_months:
+        month_set = set(request.preferred_months)
+        windows = [
+            w
+            for w in windows
+            if date.fromisoformat(w["start_date"]).month in month_set
+            or date.fromisoformat(w["end_date"]).month in month_set
+        ]
+
+    priority = request.priority
+
+    if priority == TripPriority.most_pto:
+        windows.sort(key=lambda w: w["pto_days_used"], reverse=True)
+    elif priority == TripPriority.least_pto:
+        windows.sort(key=lambda w: w["pto_days_used"])
+    else:
+        # best_yield and lowest_cost both start with highest-yield candidates;
+        # lowest_cost final ranking is handled by the ranker after prices are known
+        windows.sort(key=lambda w: w["yield_score"], reverse=True)
+
+    return {"candidate_windows": windows[:15]}
 
 
 def _score_window(
@@ -50,11 +60,8 @@ def _score_window(
     pto_budget: int,
     holidays: set[str],
 ) -> dict | None:
-    """
-    Given a start date and PTO budget, walk forward day by day.
-    Weekends and holidays are free; weekdays cost one PTO day.
-    Returns the window dict once the PTO budget is spent.
-    """
+    """Walk forward from start, consuming one PTO day per weekday/non-holiday,
+    until budget is spent."""
     pto_used = 0
     current = start
     total_days = 0

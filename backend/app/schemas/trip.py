@@ -1,6 +1,14 @@
+from enum import Enum
 from typing import Literal, TypedDict
 
 from pydantic import BaseModel, Field
+
+
+class TripPriority(str, Enum):
+    best_yield = "best_yield"  # most days off per PTO day (default)
+    lowest_cost = "lowest_cost"  # cheapest flights
+    most_pto = "most_pto"  # maximize trip length
+    least_pto = "least_pto"  # minimize PTO used
 
 
 class TripPlannerRequest(BaseModel):
@@ -10,6 +18,8 @@ class TripPlannerRequest(BaseModel):
     min_pto_days: int | None = None
     max_flight_budget: float | None = None
     company_holidays: list[str] | None = None
+    preferred_months: list[int] | None = None
+    priority: TripPriority = TripPriority.best_yield
 
 
 class FlightOption(BaseModel):
