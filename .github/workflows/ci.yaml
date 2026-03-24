@@ -67,7 +67,7 @@ jobs:
 
       - name: Check backend formatting
         working-directory: backend
-        run: python -m black --check .
+        run: python -m ruff format --check .
 
       - name: Lint backend
         working-directory: backend
@@ -82,12 +82,6 @@ jobs:
         env:
           SERPAPI_API_KEY: test-key
           OPENAI_API_KEY: test-key
-          JWT_SECRET_KEY: test-secret
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
-          POSTGRES_DB: test
         run: python -m pytest
 
   # Job that only runs when a PR was merged into main

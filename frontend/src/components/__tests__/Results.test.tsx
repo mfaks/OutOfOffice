@@ -1,9 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import Results from '../Results';
-import { AuthProvider } from '@/context/AuthContext';
 import type { TripPlannerResponse } from '@/types/types';
 
 const mockNavigate = vi.fn();
@@ -38,24 +36,17 @@ const mockResponse: TripPlannerResponse = {
         returns_at: '2026-05-26T18:00:00',
       },
       reasoning: 'Good yield score and cheap direct flight.',
+      itinerary: [],
     },
   ],
   generated_at: '2026-03-21T00:00:00Z',
 };
 
-function makeClient() {
-  return new QueryClient({ defaultOptions: { queries: { retry: false } } });
-}
-
 function renderWithState(state: Record<string, unknown> = {}) {
   return render(
-    <QueryClientProvider client={makeClient()}>
-      <AuthProvider>
-        <MemoryRouter initialEntries={[{ pathname: '/results', state }]}>
-          <Results />
-        </MemoryRouter>
-      </AuthProvider>
-    </QueryClientProvider>,
+    <MemoryRouter initialEntries={[{ pathname: '/results', state }]}>
+      <Results />
+    </MemoryRouter>,
   );
 }
 
@@ -104,6 +95,7 @@ describe('Results', () => {
             estimated_flight_cost: 200,
           },
           reasoning: 'Cheaper option found.',
+          itinerary: [],
         },
       ],
     };

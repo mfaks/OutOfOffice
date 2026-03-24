@@ -29,13 +29,24 @@ npm run format:check  # Prettier (check only, used in CI)
 
 ```bash
 fastapi dev --host 0.0.0.0   # Dev server (hot reload, use --host 0.0.0.0 in dev container)
-python -m black .            # Format
+python -m ruff format .      # Format
 python -m ruff check .       # Lint
 python -m ruff check . --fix # Lint + auto-fix
 python -m compileall .       # Syntax validation
 ```
 
 Install dependencies: `pip install -r requirements.txt`
+
+## Environment
+
+A single `.env` lives at the **repo root** (not inside `backend/` or `frontend/`). Copy `.env.example` to `.env` and fill in your keys:
+
+```
+SERPAPI_API_KEY=
+OPENAI_API_KEY=
+```
+
+The backend reads `../.env` relative to `backend/` and Vite reads `../.env` relative to `frontend/`.
 
 ## Architecture
 
@@ -56,6 +67,6 @@ Install dependencies: `pip install -r requirements.txt`
 
 CI (`.github/workflows/ci.yaml`) runs on every push and PR to main:
 1. Frontend: format check → lint → build
-2. Backend: black check → ruff lint → compileall
+2. Backend: ruff format check → ruff lint → compileall
 
-Pre-commit hooks (`.pre-commit-config.yaml`) mirror CI: Prettier + ESLint for frontend, black + ruff for backend. Install with `pre-commit install`.
+Pre-commit hooks (`.pre-commit-config.yaml`) mirror CI: Prettier + ESLint for frontend, ruff format + ruff lint for backend. Install with `pre-commit install`.

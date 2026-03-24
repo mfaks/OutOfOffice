@@ -13,9 +13,9 @@ repos:
         language: system
         pass_filenames: false
 
-      - id: backend-black
-        name: backend black
-        entry: bash -c 'cd backend && python -m black .'
+      - id: backend-format
+        name: backend format
+        entry: bash -c 'cd backend && python -m ruff format .'
         language: system
         pass_filenames: false
 
