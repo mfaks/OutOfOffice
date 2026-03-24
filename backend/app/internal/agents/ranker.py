@@ -7,19 +7,38 @@ from langchain_openai import ChatOpenAI
 from app.config import settings
 from app.schemas.trip import TripRecommendation, TripState
 
+PRIORITY_INSTRUCTIONS = {
+    "best_yield": (
+        "PRIMARY goal: maximize yield_score (most total days off per PTO day used). "
+        "Secondary: prefer lower flight cost and fewer layovers."
+    ),
+    "lowest_cost": (
+        "PRIMARY goal: minimize estimated_flight_cost. "
+        "Secondary: prefer higher yield_score and fewer layovers."
+    ),
+    "most_pto": (
+        "PRIMARY goal: maximize pto_days_used (longest trips). "
+        "Secondary: prefer higher yield_score and lower flight cost."
+    ),
+    "least_pto": (
+        "PRIMARY goal: minimize pto_days_used (shortest PTO commitment). "
+        "Secondary: prefer higher yield_score and lower flight cost."
+    ),
+}
+
 RANKER_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
             "system",
             """You are a travel planning assistant. You will be given a list of
-        candidate trip windows, each enriched with real flight data.
+        candidate trip windows, each enriched with real flight data, and a
+        user priority that dictates how to rank them.
 
-        Rank the top 5 by weighing these factors:
-        - yield_score: higher is better (more days off per PTO day spent)
-        - estimated_flight_cost: lower is better
-        - layovers: fewer is better
+        Ranking instructions based on priority:
+        {priority_instructions}
 
-        Return ONLY a valid JSON array of exactly 5 objects.
+        Return ONLY a valid JSON array of exactly 5 objects (or fewer if fewer
+        candidates exist).
         Each object must have these exact fields:
         - rank: integer (1, 2, 3, 4, or 5)
         - start_date: string (YYYY-MM-DD)
@@ -29,7 +48,8 @@ RANKER_PROMPT = ChatPromptTemplate.from_messages(
         - yield_score: float
         - best_flight: object with airline, estimated_flight_cost,
           layovers, departs_at, returns_at
-        - reasoning: string (2 sentences explaining why this window was chosen)
+        - reasoning: string (2 sentences explaining why this window was chosen
+          given the user's priority)
 
         Return no other text — just the JSON array.""",
         ),
@@ -42,13 +62,7 @@ RANKER_PROMPT = ChatPromptTemplate.from_messages(
 
 
 async def ranker_node(state: TripState) -> dict:
-    """
-    Node 3 (LLM)
-
-    Takes the enriched windows from travel_node, asks the LLM
-    to rank them into top 3, and parses the result into
-    TripRecommendation objects to return to pipeline.py.
-    """
+    """Rank enriched windows via LLM and return up to 5 TripRecommendation objects."""
 
     request = state["request"]
     enriched_windows = state["enriched_windows"]
@@ -59,10 +73,12 @@ async def ranker_node(state: TripState) -> dict:
 
     chain = RANKER_PROMPT | llm | JsonOutputParser()
 
+    priority_key = request.priority.value if request.priority else "best_yield"
     result = await chain.ainvoke(
         {
             "request": json.dumps(request.model_dump()),
             "windows": json.dumps(enriched_windows),
+            "priority_instructions": PRIORITY_INSTRUCTIONS[priority_key],
         }
     )
 

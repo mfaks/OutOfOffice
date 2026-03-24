@@ -10,10 +10,7 @@ async def search_flights(
     return_date: str,
     max_budget: float | None = None,
 ) -> list[dict]:
-    """
-    Search round-trip flights via SerpApi Google Flights.
-    Returns a list of flight options sorted by price.
-    """
+    """Search round-trip flights via SerpApi and return options sorted by price."""
     async with httpx.AsyncClient() as client:
         response = await client.get(
             "https://serpapi.com/search",

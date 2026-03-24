@@ -1,7 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import Results from '../Results';
+import { AuthProvider } from '@/context/AuthContext';
 import type { TripPlannerResponse } from '@/types/types';
 
 const mockNavigate = vi.fn();
@@ -41,11 +43,19 @@ const mockResponse: TripPlannerResponse = {
   generated_at: '2026-03-21T00:00:00Z',
 };
 
+function makeClient() {
+  return new QueryClient({ defaultOptions: { queries: { retry: false } } });
+}
+
 function renderWithState(state: Record<string, unknown> = {}) {
   return render(
-    <MemoryRouter initialEntries={[{ pathname: '/results', state }]}>
-      <Results />
-    </MemoryRouter>,
+    <QueryClientProvider client={makeClient()}>
+      <AuthProvider>
+        <MemoryRouter initialEntries={[{ pathname: '/results', state }]}>
+          <Results />
+        </MemoryRouter>
+      </AuthProvider>
+    </QueryClientProvider>,
   );
 }
 

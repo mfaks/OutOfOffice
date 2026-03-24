@@ -1,9 +1,26 @@
+export type TripPriority =
+  | 'best_yield'
+  | 'lowest_cost'
+  | 'most_pto'
+  | 'least_pto';
+
 export interface TripPlannerRequest {
   departure: string;
   destination: string;
   pto_days_remaining: number;
   max_flight_budget?: number;
   company_holidays?: string[];
+  preferred_months?: number[];
+  priority?: TripPriority;
+}
+
+export interface UserPreferences {
+  pto_days_remaining: number | null;
+  max_flight_budget: number | null;
+  default_departure: string | null;
+  default_destination: string | null;
+  company_holidays: string[];
+  preferred_months: number[];
 }
 
 export interface FlightOption {
@@ -71,4 +88,27 @@ export interface TripPlannerUIState {
   status: PlanningStatus;
   response: TripPlannerResponse | null;
   error: string | null;
+}
+
+export interface SavedTripCreate {
+  departure: string;
+  destination: string;
+  recommendation: TripRecommendation;
+}
+
+export interface SavedTrip {
+  id: number;
+  departure: string;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  pto_days_used: number;
+  total_days_off: number;
+  recommendation: TripRecommendation;
+  saved_at: string;
+}
+
+export interface SavedTripListRead {
+  trips: SavedTrip[];
+  pto_days_remaining: number | null;
 }

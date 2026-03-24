@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 
 from app.db.session import engine
-from app.routers import auth, trip
+from app.models.saved_trip import SavedTrip  # noqa: F401 — ensures table is created
+from app.routers import auth, saved_trips, trip, user
 
 
 @asynccontextmanager
@@ -20,6 +21,8 @@ async def lifespan(_: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(trip.router)
+app.include_router(user.router)
+app.include_router(saved_trips.router)
 
 
 origins = [

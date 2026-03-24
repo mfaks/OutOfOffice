@@ -46,9 +46,8 @@ describe('AuthDialog', () => {
   it('switches back to login mode when "Sign in" link is clicked in register mode', async () => {
     renderDialog();
     await userEvent.click(screen.getByRole('button', { name: /sign up/i }));
-    // In register mode the switch link says "Sign in"
     const switchLinks = screen.getAllByRole('button', { name: /sign in/i });
-    // The last one is the mode-switch link (submit button is type=submit, this is type=button)
+    // The submit button has type="submit"; the mode-switch link has type="button"
     const switchLink = switchLinks.find(
       (el) => (el as HTMLButtonElement).type === 'button',
     );

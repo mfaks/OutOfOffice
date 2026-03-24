@@ -3,14 +3,8 @@ from app.schemas.trip import TripState
 
 
 async def travel_node(state: TripState) -> dict:
-    """
-    Node 2 (API)
-
-    Takes the top 5 windows from planner_node and queries
-    SerpApi for each one. Drops any window where no flights
-    are found within the budget. Returns enriched windows
-    with a best_flight attached to each.
-    """
+    """Attach the cheapest viable flight to each candidate window; drop windows with no
+    flights."""
 
     request = state["request"]
     candidate_windows = state["candidate_windows"]
@@ -25,7 +19,6 @@ async def travel_node(state: TripState) -> dict:
             max_budget=request.max_flight_budget,
         )
 
-        # if there are no viable flights for the window, skip it
         if not flights:
             continue
 

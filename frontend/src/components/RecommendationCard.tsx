@@ -1,5 +1,13 @@
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, Plane, Sparkles } from 'lucide-react';
+import {
+  Bookmark,
+  Calendar,
+  Check,
+  Clock,
+  ExternalLink,
+  Plane,
+  Sparkles,
+} from 'lucide-react';
 import type {
   RankConfig,
   StatPillProps,
@@ -62,7 +70,19 @@ const RANK_CONFIG: Record<number, RankConfig> = {
   },
 };
 
-export function RecommendationCard({ rec }: { rec: TripRecommendation }) {
+export function RecommendationCard({
+  rec,
+  searchUrl,
+  onSave,
+  isSaving,
+  isSaved,
+}: {
+  rec: TripRecommendation;
+  searchUrl?: string;
+  onSave?: () => void;
+  isSaving?: boolean;
+  isSaved?: boolean;
+}) {
   const config = RANK_CONFIG[rec.rank] ?? RANK_CONFIG[3];
   const start = format(parseISO(rec.start_date), 'MMM d');
   const end = format(parseISO(rec.end_date), 'MMM d, yyyy');
@@ -162,6 +182,41 @@ export function RecommendationCard({ rec }: { rec: TripRecommendation }) {
             <div className="text-sm font-medium text-foreground">{returns}</div>
           </div>
         </div>
+
+        {(searchUrl || onSave) && (
+          <div className="ml-9 mt-3 flex items-center gap-2">
+            {searchUrl && (
+              <a
+                href={searchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+              >
+                Search on Kayak
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+            {onSave && (
+              <button
+                onClick={onSave}
+                disabled={isSaving || isSaved}
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaved ? (
+                  <>
+                    Saved
+                    <Check className="h-3 w-3" />
+                  </>
+                ) : (
+                  <>
+                    {isSaving ? 'Saving…' : 'Save trip'}
+                    <Bookmark className="h-3 w-3" />
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="h-px bg-border/50 ml-8 mr-6" />
