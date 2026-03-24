@@ -83,12 +83,20 @@ export function RecommendationCard({
   const config = RANK_CONFIG[rec.rank] ?? RANK_CONFIG[3];
   const start = format(parseISO(rec.start_date), 'MMM d');
   const end = format(parseISO(rec.end_date), 'MMM d, yyyy');
-  const departs = format(
-    parseISO(rec.best_flight.departs_at),
+  const outboundDeparts = format(
+    parseISO(rec.best_flight.outbound_departs_at),
     'MMM d · h:mm a',
   );
-  const returns = format(
-    parseISO(rec.best_flight.returns_at),
+  const outboundArrives = format(
+    parseISO(rec.best_flight.outbound_arrives_at),
+    'MMM d · h:mm a',
+  );
+  const returnDeparts = format(
+    parseISO(rec.best_flight.return_departs_at),
+    'MMM d · h:mm a',
+  );
+  const returnArrives = format(
+    parseISO(rec.best_flight.return_arrives_at),
     'MMM d · h:mm a',
   );
   const stopLabel =
@@ -160,23 +168,52 @@ export function RecommendationCard({
           </span>
         </div>
 
-        <div className="ml-9 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              Departs
+        <div className="ml-9 flex flex-col gap-2">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Departs
+              </div>
+              <div className="text-sm font-medium text-foreground">
+                {outboundDeparts}
+              </div>
             </div>
-            <div className="text-sm font-medium text-foreground">{departs}</div>
-          </div>
-          <div className="flex items-center gap-1 px-1">
-            <div className="h-px w-8 bg-border" />
-            <Plane className="h-3 w-3 text-muted-foreground rotate-90" />
-            <div className="h-px w-8 bg-border" />
-          </div>
-          <div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              Returns
+            <div className="flex items-center gap-1 px-1">
+              <div className="h-px w-8 bg-border" />
+              <Plane className="h-3 w-3 text-muted-foreground" />
+              <div className="h-px w-8 bg-border" />
             </div>
-            <div className="text-sm font-medium text-foreground">{returns}</div>
+            <div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Arrives
+              </div>
+              <div className="text-sm font-medium text-foreground">
+                {outboundArrives}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Returns
+              </div>
+              <div className="text-sm font-medium text-foreground">
+                {returnDeparts}
+              </div>
+            </div>
+            <div className="flex items-center gap-1 px-1">
+              <div className="h-px w-8 bg-border" />
+              <Plane className="h-3 w-3 text-muted-foreground rotate-180" />
+              <div className="h-px w-8 bg-border" />
+            </div>
+            <div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Arrives
+              </div>
+              <div className="text-sm font-medium text-foreground">
+                {returnArrives}
+              </div>
+            </div>
           </div>
         </div>
 

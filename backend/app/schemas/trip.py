@@ -26,8 +26,10 @@ class FlightOption(BaseModel):
     airline: str
     estimated_flight_cost: float
     layovers: int
-    departs_at: str
-    returns_at: str
+    outbound_departs_at: str
+    outbound_arrives_at: str
+    return_departs_at: str
+    return_arrives_at: str
 
 
 class DayItinerary(BaseModel):
