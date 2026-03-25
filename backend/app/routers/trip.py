@@ -1,12 +1,15 @@
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.internal.agents.pipeline import graph
 from app.schemas.trip import TripPlannerRequest, TripPlannerResponse, TripState
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post(
@@ -14,12 +17,13 @@ router = APIRouter()
     response_model=TripPlannerResponse,
     tags=["trip"],
 )
-async def create_trip(request: TripPlannerRequest):
+@limiter.limit("5/hour")
+async def create_trip(request: Request, body: TripPlannerRequest):
     thread_id = str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}
 
     initial_state: TripState = {
-        "request": request,
+        "request": body,
         "candidate_windows": [],
         "enriched_windows": [],
         "recommendations": [],
@@ -31,7 +35,7 @@ async def create_trip(request: TripPlannerRequest):
         result = await graph.ainvoke(initial_state, config=config)
         return TripPlannerResponse(
             thread_id=thread_id,
-            request=request,
+            request=body,
             recommendations=result["recommendations"],
             generated_at=datetime.now(timezone.utc).isoformat(),
         )
@@ -46,7 +50,8 @@ async def create_trip(request: TripPlannerRequest):
     response_model=TripPlannerResponse,
     tags=["trip"],
 )
-async def provide_feedback(thread_id: str, feedback: str):
+@limiter.limit("5/hour")
+async def provide_feedback(request: Request, thread_id: str, feedback: str):
     config = {"configurable": {"thread_id": thread_id}}
 
     try:
