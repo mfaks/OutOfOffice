@@ -31,14 +31,17 @@ const steps = [
 
 function Home() {
   return (
-    <section className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-6 py-8 text-center">
+    <section
+      aria-labelledby="home-heading"
+      className="relative flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center overflow-hidden px-6 py-8 text-center"
+    >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-0 h-[350px] w-[600px] -translate-x-1/2 rounded-full bg-primary/8 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-48 w-48 rounded-full bg-chart-2/10 blur-3xl" />
+        <div className="absolute left-1/2 top-0 h-[350px] w-[600px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
       </div>
 
       <div className="relative flex flex-col items-center gap-4 max-w-3xl w-full">
-        <TypographyH1>No PTO left behind.</TypographyH1>
+        <TypographyH1 id="home-heading">No PTO left behind.</TypographyH1>
 
         <TypographyLead className="max-w-lg">
           Hermes finds trips where your PTO goes furthest.
@@ -76,9 +79,7 @@ function Home() {
                 </TypographyMuted>
                 <TypographyH3 className="text-base">{title}</TypographyH3>
               </div>
-              <TypographyMuted className="leading-relaxed">
-                {description}
-              </TypographyMuted>
+              <TypographyMuted>{description}</TypographyMuted>
             </div>
           ))}
         </div>

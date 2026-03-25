@@ -8,7 +8,7 @@ export function TypographyH1({
   return (
     <h1
       className={cn(
-        'scroll-m-20 text-5xl font-extrabold tracking-tight sm:text-6xl',
+        'scroll-m-20 text-5xl font-bold tracking-tight leading-tight sm:text-6xl',
         className,
       )}
       {...props}
@@ -90,7 +90,10 @@ export function TypographyMuted({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn('text-sm text-muted-foreground', className)} {...props}>
+    <p
+      className={cn('text-sm text-muted-foreground leading-relaxed', className)}
+      {...props}
+    >
       {children}
     </p>
   );

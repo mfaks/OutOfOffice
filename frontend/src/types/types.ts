@@ -50,7 +50,6 @@ export interface TripPlannerResponse {
 }
 
 export interface RankConfig {
-  label: string;
   rank: string;
   headerBg: string;
   badgeStyle: string;

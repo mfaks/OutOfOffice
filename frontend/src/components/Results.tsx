@@ -123,15 +123,21 @@ function Results() {
 
       <div className="mx-auto max-w-3xl px-6 py-6">
         {recommendations.length > 0 && (
-          <div className="mb-5 flex items-center gap-2 flex-wrap">
+          <div
+            role="group"
+            aria-label="Sort results"
+            className="mb-5 flex items-center gap-2 flex-wrap"
+          >
             <TypographyMuted className="text-xs font-semibold uppercase tracking-widest mr-1">
               Sort by
             </TypographyMuted>
             {SORT_OPTIONS.map(({ key, label }) => (
               <button
                 key={key}
+                type="button"
+                aria-pressed={sortKey === key}
                 onClick={() => setSortKey(key)}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all ${
+                className={`rounded-full border px-3.5 py-2.5 text-xs font-medium transition-all ${
                   sortKey === key
                     ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                     : 'border-border/60 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
@@ -170,8 +176,9 @@ function Results() {
 
         <div className="mt-8 flex gap-2">
           <Input
+            aria-label="Refine results"
             className="bg-card border-border rounded-xl"
-            placeholder='Refine results — e.g. "find me cheaper options" or "I want a longer trip"'
+            placeholder='e.g. "find me cheaper options" or "I want a longer trip"'
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleRefine()}

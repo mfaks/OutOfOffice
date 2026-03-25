@@ -52,7 +52,7 @@ function HolidayChip({
       <button
         onClick={() => onRemove(date)}
         aria-label={`Remove ${format(date, 'MMM d')}`}
-        className="ml-0.5 transition-colors hover:text-foreground"
+        className="ml-0.5 p-1 transition-colors hover:text-foreground"
       >
         <X className="h-3 w-3" />
       </button>
@@ -114,6 +114,8 @@ export function HolidayPicker({ holidays, onChange }: HolidayPickerProps) {
     <div className="flex flex-col gap-2">
       <button
         type="button"
+        aria-expanded={calendarOpen}
+        aria-controls="holiday-calendar-panel"
         onClick={() => setCalendarOpen((o) => !o)}
         className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/40 px-3 py-2.5 text-left transition-colors hover:bg-muted/70"
       >
@@ -135,7 +137,10 @@ export function HolidayPicker({ holidays, onChange }: HolidayPickerProps) {
       </button>
 
       {calendarOpen && (
-        <div className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-sm -mt-1">
+        <div
+          id="holiday-calendar-panel"
+          className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-sm -mt-1"
+        >
           <div className="px-4 pt-4 pb-3">
             <div className="flex items-center justify-between mb-3">
               <TypographySmall className="font-semibold text-foreground">
@@ -161,7 +166,7 @@ export function HolidayPicker({ holidays, onChange }: HolidayPickerProps) {
                     key={name}
                     type="button"
                     onClick={() => toggleFederalHoliday(date)}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium transition-all ${
                       selected
                         ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-primary/5'
