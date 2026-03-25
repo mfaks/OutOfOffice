@@ -16,15 +16,17 @@ ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
         - destination: the airport code (use the city/region it represents)
         - start_date: when the trip begins (YYYY-MM-DD)
         - end_date: when the trip ends (YYYY-MM-DD)
-        - departs_at: outbound flight departure datetime (traveler leaves home)
-        - returns_at: return flight departure datetime (traveler leaves destination)
+        - outbound_departs_at: when the traveler leaves home
+        - outbound_arrives_at: when the traveler arrives at the destination
+        - return_departs_at: when the traveler leaves the destination
+        - return_arrives_at: when the traveler arrives back home
 
         Rules:
         - The first day is an arrival day — the traveler arrives at the destination
-          in the afternoon/evening based on departs_at. Suggest activities after
-          arrival only (check-in, nearby dinner, evening walk, etc.).
+          based on outbound_arrives_at. Suggest activities after arrival only
+          (check-in, nearby dinner, evening walk, etc.).
         - The last day is a departure day — the traveler must leave for the airport.
-          Suggest only morning/early activities that fit before returns_at.
+          Suggest only morning/early activities that fit before return_departs_at.
         - Full days in between should have 3–5 activities spanning morning to evening.
         - Activities should be specific, time-annotated, and realistic for
           the destination.
@@ -43,8 +45,10 @@ ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
             "Destination: {destination}\n"
             "Start date: {start_date}\n"
             "End date: {end_date}\n"
-            "Outbound flight departs at: {departs_at}\n"
-            "Return flight departs at: {returns_at}",
+            "Outbound flight: departs {outbound_departs_at},"
+            " arrives {outbound_arrives_at}\n"
+            "Return flight: departs {return_departs_at},"
+            " arrives {return_arrives_at}",
         ),
     ]
 )
@@ -69,8 +73,10 @@ async def itinerary_node(state: TripState) -> dict:
                     "destination": request.destination,
                     "start_date": rec.start_date,
                     "end_date": rec.end_date,
-                    "departs_at": rec.best_flight.departs_at,
-                    "returns_at": rec.best_flight.returns_at,
+                    "outbound_departs_at": rec.best_flight.outbound_departs_at,
+                    "outbound_arrives_at": rec.best_flight.outbound_arrives_at,
+                    "return_departs_at": rec.best_flight.return_departs_at,
+                    "return_arrives_at": rec.best_flight.return_arrives_at,
                 }
             )
             itinerary = [DayItinerary(**d) for d in days]

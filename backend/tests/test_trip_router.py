@@ -15,8 +15,10 @@ MOCK_RECOMMENDATION = TripRecommendation(
         airline="Air France",
         estimated_flight_cost=650.0,
         layovers=0,
-        departs_at="2026-05-23 08:00",
-        returns_at="2026-05-26 18:00",
+        outbound_departs_at="2026-05-23 08:00",
+        outbound_arrives_at="2026-05-23 21:00",
+        return_departs_at="2026-05-26 14:00",
+        return_arrives_at="2026-05-26 18:00",
     ),
     reasoning="Good yield score and cheap direct flight.",
 )

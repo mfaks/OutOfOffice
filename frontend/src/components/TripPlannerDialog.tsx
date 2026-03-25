@@ -202,7 +202,7 @@ export function TripPlannerDialog({
 
           <div className="flex flex-col gap-2">
             <Label className="text-sm font-medium">Optimize for</Label>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
               {PRIORITIES.map(({ value, label, description }) => (
                 <button
                   key={value}
@@ -243,7 +243,7 @@ export function TripPlannerDialog({
             <TypographySmall className="text-muted-foreground font-normal -mt-1">
               Leave empty to consider all months.
             </TypographySmall>
-            <div className="grid grid-cols-6 gap-1.5">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
               {MONTHS.map((name, i) => {
                 const m = i + 1;
                 const selected = preferredMonths.includes(m);
@@ -252,7 +252,7 @@ export function TripPlannerDialog({
                     key={m}
                     type="button"
                     onClick={() => toggleMonth(m)}
-                    className={`rounded-full border px-2 py-1 text-xs font-medium transition-all ${
+                    className={`rounded-full border px-2 py-2 text-xs font-medium transition-all ${
                       selected
                         ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-primary/5'

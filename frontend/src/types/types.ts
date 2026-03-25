@@ -18,8 +18,10 @@ export interface FlightOption {
   airline: string;
   estimated_flight_cost: number;
   layovers: number;
-  departs_at: string;
-  returns_at: string;
+  outbound_departs_at: string;
+  outbound_arrives_at: string;
+  return_departs_at: string;
+  return_arrives_at: string;
 }
 
 export interface DayItinerary {
@@ -48,7 +50,6 @@ export interface TripPlannerResponse {
 }
 
 export interface RankConfig {
-  label: string;
   rank: string;
   headerBg: string;
   badgeStyle: string;

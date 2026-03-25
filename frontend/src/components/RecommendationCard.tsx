@@ -26,49 +26,44 @@ const RANK_LABELS: Record<number, string> = {
 
 const RANK_CONFIG: Record<number, RankConfig> = {
   1: {
-    label: '1st pick',
     rank: '1',
-    headerBg: 'bg-gradient-to-br from-amber-50/80 via-yellow-50/40 to-card',
-    badgeStyle: 'bg-amber-100 text-amber-800 border border-amber-200',
-    priceStyle: 'text-amber-600',
-    accentBar: 'bg-gradient-to-b from-amber-400 to-yellow-500',
-    pillBg: 'bg-white border border-amber-100 text-amber-800',
-  },
-  2: {
-    label: '2nd pick',
-    rank: '2',
-    headerBg: 'bg-gradient-to-br from-primary/5 via-primary/3 to-card',
-    badgeStyle: 'bg-primary/10 text-primary border border-primary/20',
+    headerBg: 'bg-gradient-to-br from-primary/10 via-primary/5 to-card',
+    badgeStyle: 'bg-primary/15 text-primary border border-primary/25',
     priceStyle: 'text-primary',
     accentBar: 'bg-gradient-to-b from-primary to-primary/70',
-    pillBg: 'bg-white border border-primary/15 text-primary',
+    pillBg: 'bg-primary/10 border border-primary/20 text-primary',
+  },
+  2: {
+    rank: '2',
+    headerBg: 'bg-gradient-to-br from-primary/6 to-card',
+    badgeStyle: 'bg-primary/10 text-primary border border-primary/20',
+    priceStyle: 'text-primary',
+    accentBar: 'bg-primary/75',
+    pillBg: 'bg-primary/8 border border-primary/15 text-primary',
   },
   3: {
-    label: '3rd pick',
     rank: '3',
-    headerBg: 'bg-gradient-to-br from-orange-50/80 via-amber-50/40 to-card',
-    badgeStyle: 'bg-orange-100 text-orange-700 border border-orange-200',
-    priceStyle: 'text-orange-600',
-    accentBar: 'bg-gradient-to-b from-orange-400 to-amber-500',
-    pillBg: 'bg-white border border-orange-100 text-orange-700',
+    headerBg: 'bg-gradient-to-br from-primary/5 to-card',
+    badgeStyle: 'bg-primary/8 text-primary/80 border border-primary/15',
+    priceStyle: 'text-primary/80',
+    accentBar: 'bg-primary/50',
+    pillBg: 'bg-primary/5 border border-primary/10 text-primary/80',
   },
   4: {
-    label: '4th pick',
     rank: '4',
-    headerBg: 'bg-gradient-to-br from-slate-50/80 via-slate-50/40 to-card',
-    badgeStyle: 'bg-slate-100 text-slate-600 border border-slate-200',
-    priceStyle: 'text-slate-600',
-    accentBar: 'bg-gradient-to-b from-slate-300 to-slate-400',
-    pillBg: 'bg-white border border-slate-200 text-slate-600',
+    headerBg: 'bg-card',
+    badgeStyle: 'bg-muted text-muted-foreground border border-border',
+    priceStyle: 'text-muted-foreground',
+    accentBar: 'bg-muted-foreground/25',
+    pillBg: 'bg-muted border border-border text-muted-foreground',
   },
   5: {
-    label: '5th pick',
     rank: '5',
-    headerBg: 'bg-gradient-to-br from-slate-50/60 via-slate-50/20 to-card',
-    badgeStyle: 'bg-slate-100 text-slate-500 border border-slate-200',
-    priceStyle: 'text-slate-500',
-    accentBar: 'bg-gradient-to-b from-slate-200 to-slate-300',
-    pillBg: 'bg-white border border-slate-200 text-slate-500',
+    headerBg: 'bg-card',
+    badgeStyle: 'bg-muted text-muted-foreground/70 border border-border/60',
+    priceStyle: 'text-muted-foreground/70',
+    accentBar: 'bg-muted-foreground/15',
+    pillBg: 'bg-muted/60 border border-border/60 text-muted-foreground/70',
   },
 };
 
@@ -83,12 +78,20 @@ export function RecommendationCard({
   const config = RANK_CONFIG[rec.rank] ?? RANK_CONFIG[3];
   const start = format(parseISO(rec.start_date), 'MMM d');
   const end = format(parseISO(rec.end_date), 'MMM d, yyyy');
-  const departs = format(
-    parseISO(rec.best_flight.departs_at),
+  const outboundDeparts = format(
+    parseISO(rec.best_flight.outbound_departs_at),
     'MMM d · h:mm a',
   );
-  const returns = format(
-    parseISO(rec.best_flight.returns_at),
+  const outboundArrives = format(
+    parseISO(rec.best_flight.outbound_arrives_at),
+    'MMM d · h:mm a',
+  );
+  const returnDeparts = format(
+    parseISO(rec.best_flight.return_departs_at),
+    'MMM d · h:mm a',
+  );
+  const returnArrives = format(
+    parseISO(rec.best_flight.return_arrives_at),
     'MMM d · h:mm a',
   );
   const stopLabel =
@@ -160,23 +163,52 @@ export function RecommendationCard({
           </span>
         </div>
 
-        <div className="ml-9 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              Departs
+        <div className="sm:ml-9 flex flex-col gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Departs
+              </div>
+              <div className="text-xs sm:text-sm font-medium text-foreground">
+                {outboundDeparts}
+              </div>
             </div>
-            <div className="text-sm font-medium text-foreground">{departs}</div>
-          </div>
-          <div className="flex items-center gap-1 px-1">
-            <div className="h-px w-8 bg-border" />
-            <Plane className="h-3 w-3 text-muted-foreground rotate-90" />
-            <div className="h-px w-8 bg-border" />
-          </div>
-          <div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              Returns
+            <div className="hidden sm:flex items-center gap-1 px-1">
+              <div className="h-px w-8 bg-border" />
+              <Plane className="h-3 w-3 text-muted-foreground" />
+              <div className="h-px w-8 bg-border" />
             </div>
-            <div className="text-sm font-medium text-foreground">{returns}</div>
+            <div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Arrives
+              </div>
+              <div className="text-xs sm:text-sm font-medium text-foreground">
+                {outboundArrives}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Returns
+              </div>
+              <div className="text-xs sm:text-sm font-medium text-foreground">
+                {returnDeparts}
+              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-1 px-1">
+              <div className="h-px w-8 bg-border" />
+              <Plane className="h-3 w-3 text-muted-foreground rotate-180" />
+              <div className="h-px w-8 bg-border" />
+            </div>
+            <div>
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Arrives
+              </div>
+              <div className="text-xs sm:text-sm font-medium text-foreground">
+                {returnArrives}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -198,7 +230,10 @@ export function RecommendationCard({
       <div className="h-px bg-border/50 ml-8 mr-6" />
 
       <div className="pl-8 pr-6 py-4 flex gap-2.5">
-        <Sparkles className="h-4 w-4 text-primary/50 mt-0.5 shrink-0" />
+        <Sparkles
+          aria-hidden="true"
+          className="h-4 w-4 text-primary/50 mt-0.5 shrink-0"
+        />
         <p className="text-sm leading-relaxed text-muted-foreground italic">
           {rec.reasoning}
         </p>
@@ -210,6 +245,8 @@ export function RecommendationCard({
           <div className="pl-8 pr-6 py-3">
             <button
               type="button"
+              aria-expanded={itineraryOpen}
+              aria-controls={`itinerary-${rec.rank}`}
               onClick={() => setItineraryOpen((o) => !o)}
               className="flex w-full items-center justify-between text-sm font-semibold text-foreground hover:text-primary transition-colors"
             >
@@ -225,7 +262,10 @@ export function RecommendationCard({
             </button>
 
             {itineraryOpen && (
-              <div className="mt-3 flex flex-col gap-4">
+              <div
+                id={`itinerary-${rec.rank}`}
+                className="mt-3 flex flex-col gap-4"
+              >
                 {rec.itinerary.map((day) => (
                   <div key={day.date}>
                     <div className="flex items-baseline gap-2 mb-1.5">

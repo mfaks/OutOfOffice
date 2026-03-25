@@ -47,7 +47,8 @@ RANKER_PROMPT = ChatPromptTemplate.from_messages(
         - pto_days_used: integer
         - yield_score: float
         - best_flight: object with airline, estimated_flight_cost,
-          layovers, departs_at, returns_at
+          layovers, outbound_departs_at, outbound_arrives_at,
+          return_departs_at, return_arrives_at
         - reasoning: string (2 sentences explaining why this window was chosen
           given the user's priority)
 

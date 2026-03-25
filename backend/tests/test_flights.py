@@ -4,10 +4,10 @@ import respx
 
 from app.internal.agents.tools.flights import search_flights
 
-MOCK_SERPAPI_RESPONSE = {
+MOCK_OUTBOUND_RESPONSE = {
     "best_flights": [
         {
-            "price": 450,
+            "price": 250,
             "flights": [
                 {
                     "airline": "Air France",
@@ -17,17 +17,33 @@ MOCK_SERPAPI_RESPONSE = {
             ],
         },
         {
-            "price": 620,
+            "price": 370,
             "flights": [
                 {
                     "airline": "Delta",
                     "departure_airport": {"time": "2026-06-01 10:00"},
-                    "arrival_airport": {"time": "2026-06-01 23:00"},
+                    "arrival_airport": {"time": "2026-06-01 20:00"},
                 },
                 {
                     "airline": "Delta",
-                    "departure_airport": {"time": "2026-06-01 18:00"},
-                    "arrival_airport": {"time": "2026-06-08 09:00"},
+                    "departure_airport": {"time": "2026-06-01 21:30"},
+                    "arrival_airport": {"time": "2026-06-02 09:00"},
+                },
+            ],
+        },
+    ],
+    "other_flights": [],
+}
+
+MOCK_RETURN_RESPONSE = {
+    "best_flights": [
+        {
+            "price": 200,
+            "flights": [
+                {
+                    "airline": "Air France",
+                    "departure_airport": {"time": "2026-06-08 14:00"},
+                    "arrival_airport": {"time": "2026-06-08 17:30"},
                 },
             ],
         },
@@ -36,12 +52,22 @@ MOCK_SERPAPI_RESPONSE = {
 }
 
 
+def _mock_both():
+    call_count = {"n": 0}
+    responses = [MOCK_OUTBOUND_RESPONSE, MOCK_RETURN_RESPONSE]
+
+    def _side_effect(request):
+        resp = responses[call_count["n"] % 2]
+        call_count["n"] += 1
+        return httpx.Response(200, json=resp)
+
+    return respx.get("https://serpapi.com/search").mock(side_effect=_side_effect)
+
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_flights_returns_sorted_by_price():
-    respx.get("https://serpapi.com/search").mock(
-        return_value=httpx.Response(200, json=MOCK_SERPAPI_RESPONSE)
-    )
+    _mock_both()
 
     results = await search_flights(
         origin="JFK",
@@ -51,16 +77,14 @@ async def test_search_flights_returns_sorted_by_price():
     )
 
     assert len(results) == 2
-    assert results[0]["estimated_flight_cost"] == 450
-    assert results[1]["estimated_flight_cost"] == 620
+    assert results[0]["estimated_flight_cost"] == 450  # 250 + 200
+    assert results[1]["estimated_flight_cost"] == 570  # 370 + 200
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_flights_result_shape():
-    respx.get("https://serpapi.com/search").mock(
-        return_value=httpx.Response(200, json=MOCK_SERPAPI_RESPONSE)
-    )
+    _mock_both()
 
     results = await search_flights(
         origin="JFK",
@@ -72,16 +96,16 @@ async def test_search_flights_result_shape():
     flight = results[0]
     assert flight["airline"] == "Air France"
     assert flight["layovers"] == 0
-    assert "departs_at" in flight
-    assert "returns_at" in flight
+    assert flight["outbound_departs_at"] == "2026-06-01 08:00"
+    assert flight["outbound_arrives_at"] == "2026-06-01 21:00"
+    assert flight["return_departs_at"] == "2026-06-08 14:00"
+    assert flight["return_arrives_at"] == "2026-06-08 17:30"
 
 
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_flights_budget_filter():
-    respx.get("https://serpapi.com/search").mock(
-        return_value=httpx.Response(200, json=MOCK_SERPAPI_RESPONSE)
-    )
+    _mock_both()
 
     results = await search_flights(
         origin="JFK",
@@ -98,9 +122,7 @@ async def test_search_flights_budget_filter():
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_flights_counts_layovers():
-    respx.get("https://serpapi.com/search").mock(
-        return_value=httpx.Response(200, json=MOCK_SERPAPI_RESPONSE)
-    )
+    _mock_both()
 
     results = await search_flights(
         origin="JFK",
