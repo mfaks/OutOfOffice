@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, trip
 
 app = FastAPI()
-app.include_router(auth.router)
-app.include_router(trip.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(trip.router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,

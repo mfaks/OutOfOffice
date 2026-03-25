@@ -137,7 +137,7 @@ describe('Results', () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
         expect.stringContaining(
-          'http://localhost:8000/trips/test-thread-123/feedback',
+          'http://localhost:8000/api/trips/test-thread-123/feedback',
         ),
         expect.objectContaining({ method: 'POST' }),
       );

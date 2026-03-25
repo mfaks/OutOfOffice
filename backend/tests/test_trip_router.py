@@ -53,13 +53,13 @@ def _graph_patch():
 
 def test_create_trip_returns_200(client):
     with _graph_patch():
-        response = client.post("/trip", json=VALID_TRIP_REQUEST)
+        response = client.post("/api/trip", json=VALID_TRIP_REQUEST)
     assert response.status_code == 200
 
 
 def test_create_trip_response_shape(client):
     with _graph_patch():
-        response = client.post("/trip", json=VALID_TRIP_REQUEST)
+        response = client.post("/api/trip", json=VALID_TRIP_REQUEST)
     data = response.json()
     assert "thread_id" in data
     assert "request" in data
@@ -70,7 +70,7 @@ def test_create_trip_response_shape(client):
 
 def test_create_trip_echoes_request(client):
     with _graph_patch():
-        response = client.post("/trip", json=VALID_TRIP_REQUEST)
+        response = client.post("/api/trip", json=VALID_TRIP_REQUEST)
     data = response.json()
     assert data["request"]["departure"] == VALID_TRIP_REQUEST["departure"]
     assert data["request"]["destination"] == VALID_TRIP_REQUEST["destination"]
@@ -82,7 +82,7 @@ def test_create_trip_echoes_request(client):
 
 def test_create_trip_returns_thread_id(client):
     with _graph_patch():
-        response = client.post("/trip", json=VALID_TRIP_REQUEST)
+        response = client.post("/api/trip", json=VALID_TRIP_REQUEST)
     data = response.json()
     assert isinstance(data["thread_id"], str)
     assert len(data["thread_id"]) > 0
@@ -90,19 +90,19 @@ def test_create_trip_returns_thread_id(client):
 
 def test_create_trip_invalid_pto_days(client):
     payload = {**VALID_TRIP_REQUEST, "pto_days_remaining": 0}
-    response = client.post("/trip", json=payload)
+    response = client.post("/api/trip", json=payload)
     assert response.status_code == 422
 
 
 def test_create_trip_missing_required_fields(client):
-    response = client.post("/trip", json={"destination": "CDG"})
+    response = client.post("/api/trip", json={"destination": "CDG"})
     assert response.status_code == 422
 
 
 def test_feedback_returns_200(client):
     with _graph_patch():
         response = client.post(
-            "/trips/some-thread-id/feedback?feedback=find+cheaper+options"
+            "/api/trips/some-thread-id/feedback?feedback=find+cheaper+options"
         )
     assert response.status_code == 200
 
@@ -110,7 +110,7 @@ def test_feedback_returns_200(client):
 def test_feedback_response_shape(client):
     with _graph_patch():
         response = client.post(
-            "/trips/some-thread-id/feedback?feedback=find+cheaper+options"
+            "/api/trips/some-thread-id/feedback?feedback=find+cheaper+options"
         )
     data = response.json()
     assert "thread_id" in data
@@ -122,6 +122,8 @@ def test_feedback_response_shape(client):
 def test_feedback_echoes_thread_id(client):
     thread_id = "test-thread-123"
     with _graph_patch():
-        response = client.post(f"/trips/{thread_id}/feedback?feedback=too+expensive")
+        response = client.post(
+            f"/api/trips/{thread_id}/feedback?feedback=too+expensive"
+        )
     data = response.json()
     assert data["thread_id"] == thread_id

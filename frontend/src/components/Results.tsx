@@ -77,7 +77,7 @@ function Results() {
     setRefining(true);
     try {
       const res = await fetch(
-        `http://localhost:8000/trips/${threadId}/feedback?feedback=${encodeURIComponent(feedback)}`,
+        `http://localhost:8000/api/trips/${threadId}/feedback?feedback=${encodeURIComponent(feedback)}`,
         { method: 'POST' },
       );
       if (!res.ok) {
