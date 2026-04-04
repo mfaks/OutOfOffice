@@ -1,5 +1,5 @@
-from contextlib import ExitStack
-from unittest.mock import AsyncMock, patch
+from contextlib import contextmanager
+from unittest.mock import AsyncMock, MagicMock
 
 from app.schemas.trip import FlightOption, TripPlannerRequest, TripRecommendation
 from tests.conftest import VALID_TRIP_REQUEST
@@ -37,29 +37,32 @@ class _MockSnapshot:
     values = MOCK_STATE
 
 
-def _graph_patch():
-    stack = ExitStack()
-    stack.enter_context(
-        patch("app.routers.trip.graph.ainvoke", new=AsyncMock(return_value=MOCK_STATE))
-    )
-    stack.enter_context(
-        patch(
-            "app.routers.trip.graph.aget_state",
-            new=AsyncMock(return_value=_MockSnapshot()),
-        )
-    )
-    return stack
+class _EmptySnapshot:
+    values = {}
+
+
+@contextmanager
+def _graph_patch(client, *, empty_session=False):
+    mock_graph = MagicMock()
+    mock_graph.ainvoke = AsyncMock(return_value=MOCK_STATE)
+    snapshot = _EmptySnapshot() if empty_session else _MockSnapshot()
+    mock_graph.aget_state = AsyncMock(return_value=snapshot)
+    client.app.state.graph = mock_graph
+    try:
+        yield mock_graph
+    finally:
+        del client.app.state.graph
 
 
 def test_create_trip_returns_200(client):
-    with _graph_patch():
-        response = client.post("/trip", json=VALID_TRIP_REQUEST)
+    with _graph_patch(client):
+        response = client.post("/api/trip", json=VALID_TRIP_REQUEST)
     assert response.status_code == 200
 
 
 def test_create_trip_response_shape(client):
-    with _graph_patch():
-        response = client.post("/trip", json=VALID_TRIP_REQUEST)
+    with _graph_patch(client):
+        response = client.post("/api/trip", json=VALID_TRIP_REQUEST)
     data = response.json()
     assert "thread_id" in data
     assert "request" in data
@@ -69,8 +72,8 @@ def test_create_trip_response_shape(client):
 
 
 def test_create_trip_echoes_request(client):
-    with _graph_patch():
-        response = client.post("/trip", json=VALID_TRIP_REQUEST)
+    with _graph_patch(client):
+        response = client.post("/api/trip", json=VALID_TRIP_REQUEST)
     data = response.json()
     assert data["request"]["departure"] == VALID_TRIP_REQUEST["departure"]
     assert data["request"]["destination"] == VALID_TRIP_REQUEST["destination"]
@@ -81,8 +84,8 @@ def test_create_trip_echoes_request(client):
 
 
 def test_create_trip_returns_thread_id(client):
-    with _graph_patch():
-        response = client.post("/trip", json=VALID_TRIP_REQUEST)
+    with _graph_patch(client):
+        response = client.post("/api/trip", json=VALID_TRIP_REQUEST)
     data = response.json()
     assert isinstance(data["thread_id"], str)
     assert len(data["thread_id"]) > 0
@@ -90,27 +93,27 @@ def test_create_trip_returns_thread_id(client):
 
 def test_create_trip_invalid_pto_days(client):
     payload = {**VALID_TRIP_REQUEST, "pto_days_remaining": 0}
-    response = client.post("/trip", json=payload)
+    response = client.post("/api/trip", json=payload)
     assert response.status_code == 422
 
 
 def test_create_trip_missing_required_fields(client):
-    response = client.post("/trip", json={"destination": "CDG"})
+    response = client.post("/api/trip", json={"destination": "CDG"})
     assert response.status_code == 422
 
 
 def test_feedback_returns_200(client):
-    with _graph_patch():
+    with _graph_patch(client):
         response = client.post(
-            "/trips/some-thread-id/feedback?feedback=find+cheaper+options"
+            "/api/trips/some-thread-id/feedback?feedback=find+cheaper+options"
         )
     assert response.status_code == 200
 
 
 def test_feedback_response_shape(client):
-    with _graph_patch():
+    with _graph_patch(client):
         response = client.post(
-            "/trips/some-thread-id/feedback?feedback=find+cheaper+options"
+            "/api/trips/some-thread-id/feedback?feedback=find+cheaper+options"
         )
     data = response.json()
     assert "thread_id" in data
@@ -121,7 +124,17 @@ def test_feedback_response_shape(client):
 
 def test_feedback_echoes_thread_id(client):
     thread_id = "test-thread-123"
-    with _graph_patch():
-        response = client.post(f"/trips/{thread_id}/feedback?feedback=too+expensive")
+    with _graph_patch(client):
+        response = client.post(
+            f"/api/trips/{thread_id}/feedback?feedback=too+expensive"
+        )
     data = response.json()
     assert data["thread_id"] == thread_id
+
+
+def test_feedback_session_not_found(client):
+    with _graph_patch(client, empty_session=True):
+        response = client.post(
+            "/api/trips/nonexistent-thread/feedback?feedback=cheaper"
+        )
+    assert response.status_code == 404

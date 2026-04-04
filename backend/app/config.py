@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     serpapi_api_key: str
     openai_api_key: str
+    redis_url: str
 
 
 settings = Settings()

@@ -43,8 +43,8 @@ function HolidayChip({
   date,
   onRemove,
 }: {
-  date: Date;
-  onRemove: (date: Date) => void;
+  readonly date: Date;
+  readonly onRemove: (date: Date) => void;
 }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
@@ -61,11 +61,14 @@ function HolidayChip({
 }
 
 export interface HolidayPickerProps {
-  holidays: Date[];
-  onChange: (holidays: Date[]) => void;
+  readonly holidays: Date[];
+  readonly onChange: (holidays: Date[]) => void;
 }
 
-export function HolidayPicker({ holidays, onChange }: HolidayPickerProps) {
+export function HolidayPicker({
+  holidays,
+  onChange,
+}: Readonly<HolidayPickerProps>) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
 
@@ -101,8 +104,13 @@ export function HolidayPicker({ holidays, onChange }: HolidayPickerProps) {
         merged.push(date);
       }
     }
-    onChange(merged.sort((a, b) => a.getTime() - b.getTime()));
+    onChange(merged.toSorted((a, b) => a.getTime() - b.getTime()));
   }
+
+  const holidayCountLabel =
+    holidays.length > 0
+      ? `${holidays.length} holiday${holidays.length > 1 ? 's' : ''} selected`
+      : 'Click to add holidays';
 
   const allFederalAdded =
     remainingFederalHolidays.length > 0 &&
@@ -124,9 +132,7 @@ export function HolidayPicker({ holidays, onChange }: HolidayPickerProps) {
             Company holidays this year
           </Label>
           <TypographySmall className="text-muted-foreground font-normal block mt-0.5">
-            {holidays.length > 0
-              ? `${holidays.length} holiday${holidays.length > 1 ? 's' : ''} selected`
-              : 'Click to add holidays'}
+            {holidayCountLabel}
           </TypographySmall>
         </div>
         {calendarOpen ? (

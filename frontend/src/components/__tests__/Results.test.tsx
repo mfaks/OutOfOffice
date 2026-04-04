@@ -27,7 +27,7 @@ const mockResponse: TripPlannerResponse = {
       end_date: '2026-05-26',
       total_days_off: 4,
       pto_days_used: 2,
-      yield_score: 2.0,
+      yield_score: 2,
       best_flight: {
         airline: 'Air France',
         estimated_flight_cost: 650,
@@ -137,7 +137,7 @@ describe('Results', () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
         expect.stringContaining(
-          'http://localhost:8000/trips/test-thread-123/feedback',
+          'http://localhost:8000/api/trips/test-thread-123/feedback',
         ),
         expect.objectContaining({ method: 'POST' }),
       );

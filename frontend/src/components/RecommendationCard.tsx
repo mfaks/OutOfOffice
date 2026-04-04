@@ -71,8 +71,8 @@ export function RecommendationCard({
   rec,
   searchUrl,
 }: {
-  rec: TripRecommendation;
-  searchUrl?: string;
+  readonly rec: TripRecommendation;
+  readonly searchUrl?: string;
 }) {
   const [itineraryOpen, setItineraryOpen] = useState(false);
   const config = RANK_CONFIG[rec.rank] ?? RANK_CONFIG[3];
@@ -94,10 +94,11 @@ export function RecommendationCard({
     parseISO(rec.best_flight.return_arrives_at),
     'MMM d · h:mm a',
   );
+  const stopSuffix = rec.best_flight.layovers > 1 ? 's' : '';
   const stopLabel =
     rec.best_flight.layovers === 0
       ? 'Nonstop'
-      : `${rec.best_flight.layovers} stop${rec.best_flight.layovers > 1 ? 's' : ''}`;
+      : `${rec.best_flight.layovers} stop${stopSuffix}`;
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-card shadow-sm hover:shadow-md transition-all duration-300 border border-border/60">
@@ -279,9 +280,9 @@ export function RecommendationCard({
                       )}
                     </div>
                     <ul className="flex flex-col gap-1 ml-1">
-                      {day.activities.map((activity, i) => (
+                      {day.activities.map((activity) => (
                         <li
-                          key={i}
+                          key={activity}
                           className="text-xs text-muted-foreground leading-relaxed"
                         >
                           {activity}

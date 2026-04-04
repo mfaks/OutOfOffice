@@ -1,3 +1,4 @@
+import math
 from datetime import date
 from unittest.mock import AsyncMock, patch
 
@@ -35,7 +36,7 @@ def test_score_window_holiday_is_free():
 def test_score_window_yield_score():
     start = date(2026, 6, 5)  # Friday
     result = _score_window(start, 2, set())
-    assert result["yield_score"] == 2.0
+    assert math.isclose(result["yield_score"], 2.0)
 
 
 def _make_state(preferred_months=None):
