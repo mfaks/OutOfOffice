@@ -62,8 +62,8 @@ export function TripPlannerDialog({
   triggerClassName,
   triggerLabel = '✈️ Get Started',
 }: {
-  triggerClassName?: string;
-  triggerLabel?: string;
+  readonly triggerClassName?: string;
+  readonly triggerLabel?: string;
 }) {
   const navigate = useNavigate();
 
@@ -84,7 +84,7 @@ export function TripPlannerDialog({
       destination: destination.trim(),
       pto_days_remaining: Math.floor(Number(pto)),
       max_flight_budget: budget
-        ? Number(budget.replace(/[^0-9.]/g, ''))
+        ? Number(budget.replaceAll(/[^0-9.]/g, ''))
         : undefined,
       company_holidays: holidays.map((d) => {
         const y = d.getFullYear();

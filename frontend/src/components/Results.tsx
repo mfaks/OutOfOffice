@@ -111,7 +111,7 @@ function Results() {
           </div>
           <TypographyMuted className="ml-11 font-medium">
             {recommendations.length} trip
-            {recommendations.length !== 1 ? 's' : ''} recommended
+            {recommendations.length === 1 ? '' : 's'} recommended
             {' · '}
             {request.pto_days_remaining} PTO days available
             {request.max_flight_budget
@@ -123,8 +123,7 @@ function Results() {
 
       <div className="mx-auto max-w-3xl px-6 py-6">
         {recommendations.length > 0 && (
-          <div
-            role="group"
+          <fieldset
             aria-label="Sort results"
             className="mb-5 flex items-center gap-2 flex-wrap"
           >
@@ -146,7 +145,7 @@ function Results() {
                 {label}
               </button>
             ))}
-          </div>
+          </fieldset>
         )}
 
         {recommendations.length === 0 ? (

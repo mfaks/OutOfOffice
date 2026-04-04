@@ -10,7 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from app.config import settings
 from app.core.limiter import limiter
 from app.internal.agents.pipeline import build_graph
-from app.routers import auth, trip
+from app.routers import trip
 
 
 # Lifespan to initialize the Redis checkpoint saver and the graph
@@ -32,7 +32,6 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Include the routers
-app.include_router(auth.router, prefix="/api")
 app.include_router(trip.router, prefix="/api")
 
 # Expose the metrics endpoint for Prometheus to scrape

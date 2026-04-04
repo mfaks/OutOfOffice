@@ -13,6 +13,9 @@ router = APIRouter()
     "/trip",
     response_model=TripPlannerResponse,
     tags=["trip"],
+    responses={
+        500: {"description": "An unexpected error occurred."},
+    },
 )
 @limiter.limit("5/hour")
 async def create_trip(request: Request, body: TripPlannerRequest):
@@ -46,6 +49,10 @@ async def create_trip(request: Request, body: TripPlannerRequest):
     "/trips/{thread_id}/feedback",
     response_model=TripPlannerResponse,
     tags=["trip"],
+    responses={
+        404: {"description": "Trip session not found. Please start a new trip."},
+        500: {"description": "An unexpected error occurred."},
+    },
 )
 @limiter.limit("5/hour")
 async def provide_feedback(request: Request, thread_id: str, feedback: str):

@@ -27,7 +27,7 @@ const mockResponse: TripPlannerResponse = {
       end_date: '2026-05-26',
       total_days_off: 4,
       pto_days_used: 2,
-      yield_score: 2.0,
+      yield_score: 2,
       best_flight: {
         airline: 'Air France',
         estimated_flight_cost: 650,

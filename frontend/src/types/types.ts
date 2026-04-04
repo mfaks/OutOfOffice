@@ -59,7 +59,7 @@ export interface RankConfig {
 }
 
 export interface StatPillProps {
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  pillBg: string;
+  readonly icon: React.ReactNode;
+  readonly children: React.ReactNode;
+  readonly pillBg: string;
 }
