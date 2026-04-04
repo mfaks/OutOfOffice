@@ -1,4 +1,4 @@
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 
 from app.internal.agents.feedback import feedback_node
@@ -9,7 +9,7 @@ from app.internal.agents.travel import travel_node
 from app.schemas.trip import TripState
 
 
-def build_graph():
+def build_graph(checkpointer: BaseCheckpointSaver):
     g = StateGraph(TripState)
 
     g.add_node("interpreter", feedback_node)
@@ -25,7 +25,4 @@ def build_graph():
     g.add_edge("ranker", "itinerary")
     g.add_edge("itinerary", END)
 
-    return g.compile(checkpointer=MemorySaver())
-
-
-graph = build_graph()
+    return g.compile(checkpointer=checkpointer)

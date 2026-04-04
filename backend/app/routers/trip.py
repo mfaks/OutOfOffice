@@ -2,14 +2,11 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
-from app.internal.agents.pipeline import graph
+from app.core.limiter import limiter
 from app.schemas.trip import TripPlannerRequest, TripPlannerResponse, TripState
 
 router = APIRouter()
-limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post(
@@ -32,7 +29,7 @@ async def create_trip(request: Request, body: TripPlannerRequest):
     }
 
     try:
-        result = await graph.ainvoke(initial_state, config=config)
+        result = await request.app.state.graph.ainvoke(initial_state, config=config)
         return TripPlannerResponse(
             thread_id=thread_id,
             request=body,
@@ -55,13 +52,13 @@ async def provide_feedback(request: Request, thread_id: str, feedback: str):
     config = {"configurable": {"thread_id": thread_id}}
 
     try:
-        snapshot = await graph.aget_state(config)
+        snapshot = await request.app.state.graph.aget_state(config)
         if not snapshot.values:
             raise HTTPException(
                 status_code=404,
                 detail="Trip session not found. Please start a new trip.",
             )
-        result = await graph.ainvoke(
+        result = await request.app.state.graph.ainvoke(
             {**dict(snapshot.values), "user_feedback": feedback},
             config=config,
         )

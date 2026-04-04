@@ -11,4 +11,6 @@ langchain
 langchain-core
 langchain-openai
 langgraph
+langgraph-checkpoint-redis
 slowapi
+redis
