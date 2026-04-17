@@ -18,6 +18,9 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'layovers', label: 'Fewest layovers' },
 ];
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
+
 function sortRecs(
   recs: TripRecommendation[],
   key: SortKey,
@@ -54,7 +57,7 @@ function Results() {
   const [recommendations, setRecommendations] = useState(
     response?.recommendations ?? [],
   );
-  const [threadId] = useState(response?.thread_id);
+  const threadId = response?.thread_id;
   const [feedback, setFeedback] = useState('');
   const [refining, setRefining] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('rank');
@@ -77,8 +80,12 @@ function Results() {
     setRefining(true);
     try {
       const res = await fetch(
-        `http://localhost:8000/api/trips/${threadId}/feedback?feedback=${encodeURIComponent(feedback)}`,
-        { method: 'POST' },
+        `${API_BASE_URL}/api/trips/${threadId}/feedback`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ feedback }),
+        },
       );
       if (!res.ok) {
         const body = await res.json().catch(() => null);
@@ -90,6 +97,10 @@ function Results() {
       const data: TripPlannerResponse = await res.json();
       setRecommendations(data.recommendations);
       setFeedback('');
+    } catch {
+      toast.error('Something went wrong. Please try again.', {
+        duration: 6000,
+      });
     } finally {
       setRefining(false);
     }

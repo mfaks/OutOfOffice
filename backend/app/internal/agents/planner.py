@@ -5,12 +5,15 @@ from app.schemas.trip import TripPriority, TripState
 
 
 async def planner_node(state: TripState) -> dict:
-    """Score every PTO window by yield (days_off / pto_used) and return the top 5."""
+    """planner_node scores PTO windows by yield; country_code is hardcoded to US."""
 
     request = state["request"]
 
     year = date.today().year
-    public_holidays = await get_public_holidays(country_code="US", year=year)
+    # fetch both years so late-December windows that spill into January are correct
+    current_holidays = await get_public_holidays(country_code="US", year=year)
+    next_year_holidays = await get_public_holidays(country_code="US", year=year + 1)
+    public_holidays = current_holidays + next_year_holidays
 
     all_holidays: set[str] = set()
     for h in public_holidays:
@@ -25,9 +28,7 @@ async def planner_node(state: TripState) -> dict:
     for start_offset in range((year_end - today).days):
         start = today + timedelta(days=start_offset)
         for pto_days in range(1, request.pto_days_remaining + 1):
-            window = _score_window(start, pto_days, all_holidays)
-            if window:
-                windows.append(window)
+            windows.append(_score_window(start, pto_days, all_holidays))
 
     if request.min_pto_days:
         windows = [w for w in windows if w["pto_days_used"] >= request.min_pto_days]
@@ -48,8 +49,7 @@ async def planner_node(state: TripState) -> dict:
     elif priority == TripPriority.least_pto:
         windows.sort(key=lambda w: w["pto_days_used"])
     else:
-        # best_yield and lowest_cost both start with highest-yield candidates;
-        # lowest_cost final ranking is handled by the ranker after prices are known
+        # both modes pre-sort by yield; lowest_cost gets its final sort in the ranker
         windows.sort(key=lambda w: w["yield_score"], reverse=True)
 
     return {"candidate_windows": windows[:15]}
@@ -59,9 +59,7 @@ def _score_window(
     start: date,
     pto_budget: int,
     holidays: set[str],
-) -> dict | None:
-    """Walk forward from start, consuming one PTO day per weekday/non-holiday,
-    until budget is spent."""
+) -> dict:
     pto_used = 0
     current = start
     total_days = 0
@@ -75,9 +73,6 @@ def _score_window(
             pto_used += 1
 
         current += timedelta(days=1)
-
-    if pto_used == 0:
-        return None
 
     return {
         "start_date": start.isoformat(),

@@ -1,9 +1,15 @@
+import logging
+
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 from app.config import settings
 from app.schemas.trip import DayItinerary, TripRecommendation, TripState
+
+logger = logging.getLogger(__name__)
+
+_MODEL = "gpt-4o"
 
 ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
     [
@@ -55,14 +61,9 @@ ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
 
 
 async def itinerary_node(state: TripState) -> dict:
-    """Generate a day-by-day itinerary for each ranked recommendation."""
-
-    recommendations = state.get("recommendations", [])
-    if not recommendations:
-        return {"recommendations": []}
-
+    recommendations = state["recommendations"]
     request = state["request"]
-    llm = ChatOpenAI(model="gpt-4o", api_key=settings.openai_api_key)
+    llm = ChatOpenAI(model=_MODEL, api_key=settings.openai_api_key)
     chain = ITINERARY_PROMPT | llm | JsonOutputParser()
 
     enriched: list[TripRecommendation] = []
@@ -81,6 +82,9 @@ async def itinerary_node(state: TripState) -> dict:
             )
             itinerary = [DayItinerary(**d) for d in days]
         except Exception:
+            logger.warning(
+                "itinerary generation failed for rank %s", rec.rank, exc_info=True
+            )
             itinerary = []
 
         enriched.append(rec.model_copy(update={"itinerary": itinerary}))

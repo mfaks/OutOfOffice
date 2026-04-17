@@ -7,6 +7,8 @@ from langchain_openai import ChatOpenAI
 from app.config import settings
 from app.schemas.trip import TripPlannerRequest, TripState
 
+_MODEL = "gpt-4o"
+
 INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
@@ -44,14 +46,13 @@ INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
 
 
 async def feedback_node(state: TripState) -> dict:
-    """Parse freetext feedback into updated request constraints and increment
-    refinement_count."""
+    """feedback_node refines request from feedback; bumps refinement_count."""
 
     feedback = state.get("user_feedback")
     if not feedback:
         return {}
 
-    llm = ChatOpenAI(model="gpt-4o", api_key=settings.openai_api_key)
+    llm = ChatOpenAI(model=_MODEL, api_key=settings.openai_api_key)
     chain = INTERPRETER_PROMPT | llm | JsonOutputParser()
 
     adjustments: dict = await chain.ainvoke(

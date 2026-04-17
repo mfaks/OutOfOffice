@@ -4,7 +4,7 @@ NAGER_API_BASE = "https://date.nager.at/api/v3"
 
 
 async def get_public_holidays(country_code: str, year: int) -> list[dict]:
-    """Fetch public holidays from the Nager.Date API as {name, date} dicts."""
+    """get_public_holidays returns {name, date} dicts from the Nager.Date API."""
     url = f"{NAGER_API_BASE}/PublicHolidays/{year}/{country_code}"
 
     async with httpx.AsyncClient() as client:
