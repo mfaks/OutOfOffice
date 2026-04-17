@@ -45,6 +45,7 @@ class _EmptySnapshot:
 def _graph_patch(client, *, empty_session=False):
     mock_graph = MagicMock()
     mock_graph.ainvoke = AsyncMock(return_value=MOCK_STATE)
+    mock_graph.aupdate_state = AsyncMock()
     snapshot = _EmptySnapshot() if empty_session else _MockSnapshot()
     mock_graph.aget_state = AsyncMock(return_value=snapshot)
     client.app.state.graph = mock_graph

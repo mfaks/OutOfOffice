@@ -94,7 +94,7 @@ async def test_search_flights_result_shape():
     )
 
     flight = results[0]
-    assert flight["airline"] == "Air France"
+    assert flight["airline"] == "Air France / Air France"
     assert flight["layovers"] == 0
     assert flight["outbound_departs_at"] == "2026-06-01 08:00"
     assert flight["outbound_arrives_at"] == "2026-06-01 21:00"
