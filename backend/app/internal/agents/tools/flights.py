@@ -1,5 +1,3 @@
-import asyncio
-
 import httpx
 
 from app.config import settings
@@ -51,30 +49,31 @@ async def search_flights(
 ) -> list[dict]:
     """Search round-trip flights via two one-way SerpApi calls, sorted by price."""
     async with httpx.AsyncClient() as client:
-        outbound_legs, return_legs = await asyncio.gather(
-            _fetch_one_way(client, origin, destination, departure_date),
-            _fetch_one_way(client, destination, origin, return_date),
+        outbound_legs = await _fetch_one_way(
+            client, origin, destination, departure_date
         )
+        return_legs = await _fetch_one_way(client, destination, origin, return_date)
 
     if not outbound_legs or not return_legs:
         return []
 
-    cheapest_return = return_legs[0]
     flights = []
     for out in outbound_legs:
-        total_price = out["price"] + cheapest_return["price"]
-        if max_budget and total_price > max_budget:
-            continue
-        flights.append(
-            {
-                "airline": out["airline"],
-                "estimated_flight_cost": total_price,
-                "layovers": out["layovers"],
-                "outbound_departs_at": out["departs_at"],
-                "outbound_arrives_at": out["arrives_at"],
-                "return_departs_at": cheapest_return["departs_at"],
-                "return_arrives_at": cheapest_return["arrives_at"],
-            }
-        )
+        for ret in return_legs:
+            total_price = out["price"] + ret["price"]
+            if max_budget is not None and total_price > max_budget:
+                continue
+
+            flights.append(
+                {
+                    "airline": f"{out['airline']} / {ret['airline']}",
+                    "estimated_flight_cost": total_price,
+                    "layovers": out["layovers"] + ret["layovers"],
+                    "outbound_departs_at": out["departs_at"],
+                    "outbound_arrives_at": out["arrives_at"],
+                    "return_departs_at": ret["departs_at"],
+                    "return_arrives_at": ret["arrives_at"],
+                }
+            )
 
     return sorted(flights, key=lambda f: f["estimated_flight_cost"])

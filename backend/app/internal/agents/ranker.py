@@ -7,6 +7,8 @@ from langchain_openai import ChatOpenAI
 from app.config import settings
 from app.schemas.trip import TripRecommendation, TripState
 
+_MODEL = "gpt-4o"
+
 PRIORITY_INSTRUCTIONS = {
     "best_yield": (
         "PRIMARY goal: maximize yield_score (most total days off per PTO day used). "
@@ -63,21 +65,18 @@ RANKER_PROMPT = ChatPromptTemplate.from_messages(
 
 
 async def ranker_node(state: TripState) -> dict:
-    """Rank enriched windows via LLM and return up to 5 TripRecommendation objects."""
-
     request = state["request"]
     enriched_windows = state["enriched_windows"]
-    if not enriched_windows:
-        return {"recommendations": []}
-
-    llm = ChatOpenAI(model="gpt-4o", api_key=settings.openai_api_key)
+    llm = ChatOpenAI(model=_MODEL, api_key=settings.openai_api_key)
 
     chain = RANKER_PROMPT | llm | JsonOutputParser()
 
-    priority_key = request.priority.value if request.priority else "best_yield"
+    priority_key = request.priority.value
+    request_dict = request.model_dump()
+    request_dict.pop("priority", None)
     result = await chain.ainvoke(
         {
-            "request": json.dumps(request.model_dump()),
+            "request": json.dumps(request_dict),
             "windows": json.dumps(enriched_windows),
             "priority_instructions": PRIORITY_INSTRUCTIONS[priority_key],
         }

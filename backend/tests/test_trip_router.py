@@ -45,6 +45,7 @@ class _EmptySnapshot:
 def _graph_patch(client, *, empty_session=False):
     mock_graph = MagicMock()
     mock_graph.ainvoke = AsyncMock(return_value=MOCK_STATE)
+    mock_graph.aupdate_state = AsyncMock()
     snapshot = _EmptySnapshot() if empty_session else _MockSnapshot()
     mock_graph.aget_state = AsyncMock(return_value=snapshot)
     client.app.state.graph = mock_graph
@@ -105,7 +106,8 @@ def test_create_trip_missing_required_fields(client):
 def test_feedback_returns_200(client):
     with _graph_patch(client):
         response = client.post(
-            "/api/trips/some-thread-id/feedback?feedback=find+cheaper+options"
+            "/api/trips/some-thread-id/feedback",
+            json={"feedback": "find cheaper options"},
         )
     assert response.status_code == 200
 
@@ -113,7 +115,8 @@ def test_feedback_returns_200(client):
 def test_feedback_response_shape(client):
     with _graph_patch(client):
         response = client.post(
-            "/api/trips/some-thread-id/feedback?feedback=find+cheaper+options"
+            "/api/trips/some-thread-id/feedback",
+            json={"feedback": "find cheaper options"},
         )
     data = response.json()
     assert "thread_id" in data
@@ -126,7 +129,8 @@ def test_feedback_echoes_thread_id(client):
     thread_id = "test-thread-123"
     with _graph_patch(client):
         response = client.post(
-            f"/api/trips/{thread_id}/feedback?feedback=too+expensive"
+            f"/api/trips/{thread_id}/feedback",
+            json={"feedback": "too expensive"},
         )
     data = response.json()
     assert data["thread_id"] == thread_id
@@ -135,6 +139,7 @@ def test_feedback_echoes_thread_id(client):
 def test_feedback_session_not_found(client):
     with _graph_patch(client, empty_session=True):
         response = client.post(
-            "/api/trips/nonexistent-thread/feedback?feedback=cheaper"
+            "/api/trips/nonexistent-thread/feedback",
+            json={"feedback": "cheaper"},
         )
     assert response.status_code == 404
