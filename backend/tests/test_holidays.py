@@ -10,7 +10,7 @@ MOCK_HOLIDAYS_RESPONSE = [
     {"name": "Independence Day", "date": "2026-07-04", "global": True},
 ]
 
-
+# Check if the get public holidays function filters the global holidays only
 @pytest.mark.asyncio
 @respx.mock
 async def test_get_public_holidays_filters_global_only():
@@ -24,7 +24,7 @@ async def test_get_public_holidays_filters_global_only():
     names = [h["name"] for h in result]
     assert "Regional Holiday" not in names
 
-
+# Check if the get public holidays function returns the holidays with the correct shape
 @pytest.mark.asyncio
 @respx.mock
 async def test_get_public_holidays_result_shape():
@@ -38,7 +38,7 @@ async def test_get_public_holidays_result_shape():
         assert "name" in holiday
         assert "date" in holiday
 
-
+# Check if the get public holidays function returns an empty list if no holidays are found
 @pytest.mark.asyncio
 @respx.mock
 async def test_get_public_holidays_empty_response():
@@ -49,7 +49,7 @@ async def test_get_public_holidays_empty_response():
     result = await get_public_holidays("US", 2026)
     assert result == []
 
-
+# Check if the get public holidays function raises an error if the HTTP error is 404
 @pytest.mark.asyncio
 @respx.mock
 async def test_get_public_holidays_http_error_raises():

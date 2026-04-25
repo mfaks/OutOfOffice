@@ -1,4 +1,4 @@
-import logging
+import asyncio
 
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -7,15 +7,16 @@ from langchain_openai import ChatOpenAI
 from app.config import settings
 from app.schemas.trip import DayItinerary, TripRecommendation, TripState
 
-logger = logging.getLogger(__name__)
 
+# Model to use for the itinerary agent to generate the itinerary for the trip
 _MODEL = "gpt-4o"
 
+# Prompt for the itinerary agent to generate the itinerary for the trip
 ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
-            "system",
-            """You are a travel planning assistant. Given a trip recommendation,
+        "system",
+        """You are a travel planning assistant. Given a trip recommendation,
         generate a day-by-day activity itinerary for the destination.
 
         You will receive:
@@ -28,10 +29,10 @@ ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
         - return_arrives_at: when the traveler arrives back home
 
         Rules:
-        - The first day is an arrival day — the traveler arrives at the destination
-          based on outbound_arrives_at. Suggest activities after arrival only
+        - The first day is an arrival day. The traveler arrives based on
+          outbound_arrives_at. Suggest activities after arrival only
           (check-in, nearby dinner, evening walk, etc.).
-        - The last day is a departure day — the traveler must leave for the airport.
+        - The last day is a departure day. The traveler must leave for the airport.
           Suggest only morning/early activities that fit before return_departs_at.
         - Full days in between should have 3–5 activities spanning morning to evening.
         - Activities should be specific, time-annotated, and realistic for
@@ -44,7 +45,7 @@ ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
           "Departure day (departs 2:00 PM)")
         - activities: array of strings
 
-        Return no other text — just the JSON array.""",
+        Return only the JSON array, no other text.""",
         ),
         (
             "human",
@@ -60,33 +61,42 @@ ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
 )
 
 
+# Helper function to build the itinerary for the trip
+async def _build_itinerary(
+    chain, request, rec: TripRecommendation
+) -> TripRecommendation:
+
+    days = await chain.ainvoke(
+        {
+            "destination": request.destination,
+            "start_date": rec.start_date,
+            "end_date": rec.end_date,
+            "outbound_departs_at": rec.best_flight.outbound_departs_at,
+            "outbound_arrives_at": rec.best_flight.outbound_arrives_at,
+            "return_departs_at": rec.best_flight.return_departs_at,
+            "return_arrives_at": rec.best_flight.return_arrives_at,
+        }
+    )
+    itinerary = []
+    # Validate the days and add them to the itinerary
+    for d in days:
+        itinerary.append(DayItinerary.model_validate(d))
+
+    # Return the updated recommendation with the itinerary
+    return rec.model_copy(update={"itinerary": itinerary})
+
+
 async def itinerary_node(state: TripState) -> dict:
     recommendations = state["recommendations"]
     request = state["request"]
     llm = ChatOpenAI(model=_MODEL, api_key=settings.openai_api_key)
     chain = ITINERARY_PROMPT | llm | JsonOutputParser()
 
-    enriched: list[TripRecommendation] = []
-    for rec in recommendations:
-        try:
-            days = await chain.ainvoke(
-                {
-                    "destination": request.destination,
-                    "start_date": rec.start_date,
-                    "end_date": rec.end_date,
-                    "outbound_departs_at": rec.best_flight.outbound_departs_at,
-                    "outbound_arrives_at": rec.best_flight.outbound_arrives_at,
-                    "return_departs_at": rec.best_flight.return_departs_at,
-                    "return_arrives_at": rec.best_flight.return_arrives_at,
-                }
-            )
-            itinerary = [DayItinerary(**d) for d in days]
-        except Exception:
-            logger.warning(
-                "itinerary generation failed for rank %s", rec.rank, exc_info=True
-            )
-            itinerary = []
-
-        enriched.append(rec.model_copy(update={"itinerary": itinerary}))
-
-    return {"recommendations": enriched}
+    # Build the itinerary for each recommendation using coroutines to run in parallel
+    tasks = map(lambda rec: _build_itinerary(chain, request, rec), recommendations)
+    
+    # Run the tasks in parallel and gather the results
+    enriched = await asyncio.gather(*tasks)
+    
+    # Return the updated recommendations with the itinerary
+    return {"recommendations": list(enriched)}

@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 from app.internal.agents.planner import _score_window, planner_node
 from app.schemas.trip import TripPlannerRequest
 
-
 def test_score_window_basic():
     start = date(2026, 6, 1)  # Monday
     result = _score_window(start, 2, set())
@@ -17,7 +16,7 @@ def test_score_window_basic():
 def test_score_window_weekend_is_free():
     start = date(
         2026, 6, 5
-    )  # Friday — Sat/Sun are free, so 2 PTO days yields 4 days off
+    )  # starts on a Friday; the weekend adds free days so 2 PTO days yields 4 days off
     result = _score_window(start, 2, set())
     assert result is not None
     assert result["pto_days_used"] == 2
@@ -38,7 +37,7 @@ def test_score_window_yield_score():
     result = _score_window(start, 2, set())
     assert math.isclose(result["yield_score"], 2.0)
 
-
+# Helper function to make the state for the planner tests
 def _make_state(preferred_months=None):
     return {
         "request": TripPlannerRequest(
@@ -54,7 +53,6 @@ def _make_state(preferred_months=None):
         "refinement_count": 0,
     }
 
-
 async def test_planner_no_preferred_months_returns_windows():
     with patch(
         "app.internal.agents.planner.get_public_holidays",
@@ -63,7 +61,6 @@ async def test_planner_no_preferred_months_returns_windows():
         result = await planner_node(_make_state())
     assert "candidate_windows" in result
     assert len(result["candidate_windows"]) <= 15
-
 
 async def test_planner_preferred_months_filters_to_matching_months():
     with patch(
@@ -75,7 +72,6 @@ async def test_planner_preferred_months_filters_to_matching_months():
         start_month = date.fromisoformat(w["start_date"]).month
         end_month = date.fromisoformat(w["end_date"]).month
         assert start_month == 6 or end_month == 6
-
 
 async def test_planner_preferred_months_no_matching_windows_returns_empty():
     # Feb 2026 is past; with 3 PTO days, year-end windows spill into Jan 2027 at most
