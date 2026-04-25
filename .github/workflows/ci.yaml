@@ -64,6 +64,10 @@ jobs:
             - name: Run backend tests
               run: python -m pytest
               working-directory: backend
+              env:
+                  SERPAPI_API_KEY: test-key
+                  OPENAI_API_KEY: test-key
+                  REDIS_URL: redis://localhost:6379
 
             - name: Build frontend
               run: npm run build
