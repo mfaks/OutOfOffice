@@ -17,8 +17,10 @@ async def get_public_holidays(country_code: str, year: int) -> list[dict]:
     # Parse the response and extract the public holidays; used for extended holidays
     holidays = []
     for holiday in holidays:
-        holidays.append({
-            "name": holiday["name"],
-            "date": holiday["date"],
-        })
+        holidays.append(
+            {
+                "name": holiday["name"],
+                "date": holiday["date"],
+            }
+        )
     return holidays

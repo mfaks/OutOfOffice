@@ -34,8 +34,8 @@ PRIORITY_INSTRUCTIONS = {
 RANKER_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
-        "system",
-        """You are a travel planning assistant. You will be given a list of
+            "system",
+            """You are a travel planning assistant. You will be given a list of
         candidate trip windows, each enriched with real flight data, and a
         user priority that dictates how to rank them.
 
@@ -65,6 +65,7 @@ RANKER_PROMPT = ChatPromptTemplate.from_messages(
         ),
     ]
 )
+
 
 # Ranker agent to rank the candidate windows
 async def ranker_node(state: TripState) -> dict:

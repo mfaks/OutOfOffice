@@ -9,7 +9,7 @@ from slowapi.errors import RateLimitExceeded
 from app.config import settings
 from app.core.limiter import limiter
 from app.internal.agents.pipeline import build_graph
-from app.routers import trip, health
+from app.routers import health, trip
 
 
 # Lifespan to initialize the Redis checkpoint saver and the graph

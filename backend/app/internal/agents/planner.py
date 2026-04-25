@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from app.internal.agents.tools.holidays import get_public_holidays
 from app.schemas.trip import TripPriority, TripState
 
+
 # Planner agent to score PTO windows by yield
 async def planner_node(state: TripState) -> dict:
 
@@ -59,8 +60,9 @@ async def planner_node(state: TripState) -> dict:
         # both modes pre-sort by yield; lowest_cost gets its final sort in the ranker
         windows.sort(key=lambda w: w["yield_score"], reverse=True)
 
-    # Return the top 5 windows 
+    # Return the top 5 windows
     return {"candidate_windows": windows[:5]}
+
 
 # Helper function to score a PTO window by yield
 def _score_window(

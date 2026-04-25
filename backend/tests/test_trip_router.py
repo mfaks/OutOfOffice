@@ -32,13 +32,16 @@ MOCK_STATE = {
     "refinement_count": 0,
 }
 
+
 # Mock snapshot for testing
 class _MockSnapshot:
     values = MOCK_STATE
 
+
 # Empty snapshot for testing
 class _EmptySnapshot:
     values = {}
+
 
 # Patch the graph for testing
 @contextmanager
@@ -54,11 +57,13 @@ def _graph_patch(client, *, empty_session=False):
     finally:
         del client.app.state.graph
 
+
 # Check if the create trip endpoint returns a 200 status code
 def test_create_trip_returns_200(client):
     with _graph_patch(client):
         response = client.post("/api/trip", json=VALID_TRIP_REQUEST)
     assert response.status_code == 200
+
 
 # Check if the create trip endpoint returns the response with the correct shape
 def test_create_trip_response_shape(client):
@@ -70,6 +75,7 @@ def test_create_trip_response_shape(client):
     assert "recommendations" in data
     assert "generated_at" in data
     assert isinstance(data["recommendations"], list)
+
 
 # Check if the create trip endpoint sends the request to the graph
 def test_create_trip_echoes_request(client):
@@ -83,6 +89,7 @@ def test_create_trip_echoes_request(client):
         == VALID_TRIP_REQUEST["pto_days_remaining"]
     )
 
+
 # Check if the create trip endpoint returns a thread ID
 def test_create_trip_returns_thread_id(client):
     with _graph_patch(client):
@@ -91,6 +98,7 @@ def test_create_trip_returns_thread_id(client):
     assert isinstance(data["thread_id"], str)
     assert len(data["thread_id"]) > 0
 
+
 # Check if the create trip endpoint returns a 422 status code if the PTO days are invalid
 def test_create_trip_invalid_pto_days(client):
     payload = dict(VALID_TRIP_REQUEST)
@@ -98,10 +106,12 @@ def test_create_trip_invalid_pto_days(client):
     response = client.post("/api/trip", json=payload)
     assert response.status_code == 422
 
+
 # Check if the create trip endpoint returns a 422 status code if the required fields are missing
 def test_create_trip_missing_required_fields(client):
     response = client.post("/api/trip", json={"destination": "CDG"})
     assert response.status_code == 422
+
 
 # Check if the feedback endpoint returns a 200 status code
 def test_feedback_returns_200(client):
@@ -111,6 +121,7 @@ def test_feedback_returns_200(client):
             json={"feedback": "find cheaper options"},
         )
     assert response.status_code == 200
+
 
 # Check if the feedback endpoint returns the response with the correct shape
 def test_feedback_response_shape(client):
@@ -136,6 +147,7 @@ def test_feedback_echoes_thread_id(client):
         )
     data = response.json()
     assert data["thread_id"] == thread_id
+
 
 # Check if the feedback endpoint returns a 404 status code if the session is not found
 def test_feedback_session_not_found(client):

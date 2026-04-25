@@ -4,6 +4,7 @@ import httpx
 
 from app.config import settings
 
+
 # Helper function to fetch one-way flights from SerpApi because SerpApi doesn't support round-trip flights
 async def _fetch_one_way(
     client: httpx.AsyncClient,
@@ -11,7 +12,7 @@ async def _fetch_one_way(
     destination: str,
     date: str,
 ) -> list[dict]:
-    
+
     # SerpApi API call to fetch flights
     response = await client.get(
         "https://serpapi.com/search",
@@ -42,7 +43,7 @@ async def _fetch_one_way(
                 "arrives_at": last_leg["arrival_airport"]["time"],
             }
         )
-        
+
     # Sort flights by lowest price
     return sorted(flights, key=lambda f: f["price"])
 
@@ -72,7 +73,7 @@ async def search_flights(
     for out in outbound_flights:
         for ret in return_flights:
             total_price = out["price"] + ret["price"]
-            
+
             # If the total price is greater than the max budget, skip this flight
             if max_budget is not None and total_price > max_budget:
                 continue

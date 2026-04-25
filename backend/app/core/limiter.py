@@ -1,7 +1,8 @@
-from starlette.requests import Request
 from slowapi import Limiter
+from starlette.requests import Request
 
 from app.config import settings
+
 
 # Help function for the rate limiter to get the real client IP; CloudFront forwards the original client IP in X-Forwarded-For; fall back to the direct connection IP
 def _real_ip(request: Request) -> str:

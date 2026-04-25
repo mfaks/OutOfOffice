@@ -15,9 +15,11 @@ VALID_TRIP_REQUEST = {
     "company_holidays": [],
 }
 
+
 # Function to bypass the rate limit in tests
 def _bypass_rate_limit(request, endpoint_func, in_middleware=True):
     request.state.view_rate_limit = None
+
 
 # Fixture to set up environment and bypass the rate limit in tests
 @pytest.fixture

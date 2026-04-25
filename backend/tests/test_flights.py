@@ -51,6 +51,7 @@ MOCK_RETURN_RESPONSE = {
     "other_flights": [],
 }
 
+
 # Helper function to mock the outbound and return responses
 def _mock_both():
     call_count = {"n": 0}
@@ -62,6 +63,7 @@ def _mock_both():
         return httpx.Response(200, json=resp)
 
     return respx.get("https://serpapi.com/search").mock(side_effect=_side_effect)
+
 
 # Check if the search flights function returns the flights sorted by price
 @pytest.mark.asyncio

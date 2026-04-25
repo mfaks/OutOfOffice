@@ -14,8 +14,8 @@ _MODEL = "gpt-4o"
 INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
-        "system",
-        """You are a travel planning assistant. The user has reviewed trip
+            "system",
+            """You are a travel planning assistant. The user has reviewed trip
         recommendations and provided feedback. Your job is to translate that
         feedback into updated constraints on their trip request.
 
@@ -45,6 +45,7 @@ INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
         ),
     ]
 )
+
 
 # Feedback agent to refine the results of the trip planner
 async def feedback_node(state: TripState) -> dict:

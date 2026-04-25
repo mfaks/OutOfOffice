@@ -15,6 +15,7 @@ from app.schemas.trip import (
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 # Endpoint to create a new trip
 @router.post(
     "/trip",
@@ -71,7 +72,7 @@ async def create_trip(request: Request, body: TripPlannerRequest):
 # Rate limit the endpoint to 5 requests per hour
 @limiter.limit("5/hour")
 async def provide_feedback(request: Request, thread_id: str, body: FeedbackBody):
-    
+
     # Use the thread ID to get the state for the trip
     config = {"configurable": {"thread_id": thread_id}}
 
