@@ -43,7 +43,7 @@ AI agent-powered platform for optimizing PTO and vacation planning. Provide your
 ## Project Architecture
 
 ```text
-Browser (React 19 + Vite + shadcn/ui)
+Browser (React + Vite + shadcn/ui)
     │
     └── HTTP ──────────────► backend :8000  (FastAPI)
                                  │
@@ -90,8 +90,6 @@ docker compose up
 ## Deploying to AWS
 
 The backend runs as a Docker container on a single EC2 instance. The frontend is a static build served via S3+CloudFront.
-
-You'll need Terraform >= 1.9, AWS CLI >= 2, and Docker with permissions to create EC2, ECR, S3, CloudFront, and IAM resources.
 
 ```bash
 aws configure               # key, secret, region
