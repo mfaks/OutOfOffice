@@ -3,14 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langgraph.checkpoint.redis.aio import AsyncRedisSaver
-from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.core.limiter import limiter
 from app.internal.agents.pipeline import build_graph
-from app.routers import trip
+from app.routers import trip, health
 
 
 # Lifespan to initialize the Redis checkpoint saver and the graph
@@ -22,7 +21,6 @@ async def lifespan(app: FastAPI):
         yield
 
 
-# Create the FastAPI app
 app = FastAPI(lifespan=lifespan)
 
 # Add the rate limiter to the app state
@@ -31,16 +29,14 @@ app.state.limiter = limiter
 # Add the exception handler for rate limit exceeded to the app
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Include the routers
+app.include_router(health.router)
 app.include_router(trip.router, prefix="/api")
 
-# Expose the metrics endpoint for Prometheus to scrape
-Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
-# Add the CORS middleware to only allow requests from the frontend
+# CORS_ORIGINS is a comma-separated list so multiple origins can be allowed without changing code (e.g. localhost for dev, CloudFront for prod).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=settings.cors_origins.split(","),
     allow_methods=["*"],
     allow_headers=["*"],
     max_age=600,
