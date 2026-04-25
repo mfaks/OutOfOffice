@@ -26,6 +26,33 @@ resource "aws_s3_bucket_acl" "logs" {
     acl        = "log-delivery-write"
 }
 
+data "aws_iam_policy_document" "logs_https_only" {
+    statement {
+        effect  = "Deny"
+        actions = ["s3:*"]
+        resources = [
+            aws_s3_bucket.logs.arn,
+            "${aws_s3_bucket.logs.arn}/*",
+        ]
+
+        principals {
+            type        = "*"
+            identifiers = ["*"]
+        }
+
+        condition {
+            test     = "Bool"
+            variable = "aws:SecureTransport"
+            values   = ["false"]
+        }
+    }
+}
+
+resource "aws_s3_bucket_policy" "logs" {
+    bucket = aws_s3_bucket.logs.id
+    policy = data.aws_iam_policy_document.logs_https_only.json
+}
+
 # Account ID suffix guarantees a globally unique bucket name
 resource "aws_s3_bucket" "frontend" {
     bucket        = "${var.project_name}-frontend-${data.aws_caller_identity.current.account_id}"
