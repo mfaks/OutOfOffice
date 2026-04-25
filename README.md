@@ -89,7 +89,7 @@ docker compose up
 
 ## Deploying to AWS
 
-The backend runs as a Docker container on a single EC2 instance. The frontend is a static build served via S3+CloudFront. Budget roughly **$15–20/month** (t3.small + S3/CloudFront).
+The backend runs as a Docker container on a single EC2 instance. The frontend is a static build served via S3+CloudFront.
 
 You'll need Terraform >= 1.9, AWS CLI >= 2, and Docker with permissions to create EC2, ECR, S3, CloudFront, and IAM resources.
 
