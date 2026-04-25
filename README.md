@@ -200,7 +200,7 @@ This deployment was built to practice provisioning a full-stack app with Terrafo
 - **Single EC2 instance** — Redis and the backend share one t3.small on a Docker bridge network (`outofoffice`), keeping Redis off the internet entirely.
 - **No NAT gateway** — the instance sits in a public subnet and reaches ECR/AWS APIs directly, avoiding NAT gateway costs.
 - **ECR lifecycle policy** — retains the 3 most recent images for one-step rollback without accumulating storage costs.
-- **S3 + CloudFront with OAC** — OAC is the current AWS-recommended way to grant CloudFront read access to a private S3 bucket. Custom error rules rewrite 403/404 to `index.html` so React Router handles deep links.
+- **S3 + CloudFront with OAC** — OAC is the current recommended way to grant CloudFront read access to a private S3 bucket. Custom error rules rewrite 403/404 to `index.html` so React Router handles deep links.
 - **CloudFront `/api/*` routing** — the frontend routes all API calls through CloudFront instead of directly to EC2, avoiding mixed-content blocks. The `/api/*` cache behavior proxies to EC2 port 8000 with caching disabled so responses are never served stale.
 
 ---
