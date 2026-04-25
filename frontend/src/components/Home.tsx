@@ -19,7 +19,7 @@ const steps = [
     icon: Search,
     title: 'We find the windows',
     description:
-      'Hermes scans for gaps where one PTO day turns into a 4- or 5-day weekend.',
+      'OutOfOffice scans for gaps where one PTO day turns into a 4- or 5-day weekend.',
   },
   {
     icon: MapPin,
@@ -44,7 +44,7 @@ function Home() {
         <TypographyH1 id="home-heading">No PTO left behind.</TypographyH1>
 
         <TypographyLead className="max-w-lg">
-          Hermes finds trips where your PTO goes furthest.
+          OutOfOffice finds trips where your PTO goes furthest.
           <br />
           Real flights, real dates, real adventures.
         </TypographyLead>

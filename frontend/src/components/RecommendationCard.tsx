@@ -70,12 +70,15 @@ const RANK_CONFIG: Record<number, RankConfig> = {
 export function RecommendationCard({
   rec,
   searchUrl,
+  displayRank,
 }: {
   readonly rec: TripRecommendation;
   readonly searchUrl?: string;
+  readonly displayRank?: number;
 }) {
   const [itineraryOpen, setItineraryOpen] = useState(false);
-  const config = RANK_CONFIG[rec.rank] ?? RANK_CONFIG[3];
+  const rank = displayRank ?? rec.rank;
+  const config = RANK_CONFIG[rank] ?? RANK_CONFIG[3];
   const start = format(parseISO(rec.start_date), 'MMM d');
   const end = format(parseISO(rec.end_date), 'MMM d, yyyy');
   const outboundDeparts = format(
@@ -112,7 +115,7 @@ export function RecommendationCard({
             <span
               className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${config.badgeStyle}`}
             >
-              {RANK_LABELS[rec.rank]}
+              {RANK_LABELS[rank]}
             </span>
 
             <h3 className="text-2xl font-bold tracking-tight text-foreground">

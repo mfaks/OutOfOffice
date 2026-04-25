@@ -174,10 +174,11 @@ function Results() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {sorted.map((rec) => (
+            {sorted.map((rec, i) => (
               <RecommendationCard
                 key={rec.rank}
                 rec={rec}
+                displayRank={i + 1}
                 searchUrl={`https://www.kayak.com/flights/${request.departure}-${request.destination}/${rec.start_date}/${rec.end_date}`}
               />
             ))}
