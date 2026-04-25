@@ -12,12 +12,39 @@ AI agent-powered platform for optimizing PTO and vacation planning. Provide your
 - **Company holiday awareness**: mark company holidays so they count as free days in the optimizer
 - **Preferred month filtering**: constrain the search to specific months of the year
 
+  
 ## Pictures
+
+### Initial Search
+
+<p align="center">
+  <img width="565" alt="Trip Form" src="https://github.com/user-attachments/assets/06edb6ff-42b4-48c5-951f-1bb50c206343" />
+</p>
+
+<p align="center">
+  <img width="844" alt="Initial Results" src="https://github.com/user-attachments/assets/55454c15-b9aa-46d5-b90a-0c0db255e897" />
+</p>
+
+### Expanded Trip Details
+
+<p align="center">
+  <img width="900" alt="Expanded Itinerary" src="https://github.com/user-attachments/assets/627daa4e-dcb1-4fa8-80d8-79b98a164836" />
+</p>
+
+### Feedback and Refined Results
+
+<p align="center">
+  <img width="650" alt="Feedback Option" src="https://github.com/user-attachments/assets/92c52833-13d8-47e7-95cf-b5e915de6abf" />
+</p>
+
+<p align="center">
+  <img width="650" alt="Feedback Results" src="https://github.com/user-attachments/assets/4c8345a4-daee-40b3-8962-3162fa4c6e80" />
+</p>
 
 ## Project Architecture
 
 ```text
-Browser (React 19 + Vite + shadcn/ui)
+Browser (React + Vite + shadcn/ui)
     │
     └── HTTP ──────────────► backend :8000  (FastAPI)
                                  │
