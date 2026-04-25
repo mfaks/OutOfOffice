@@ -14,13 +14,14 @@ async def get_public_holidays(country_code: str, year: int) -> list[dict]:
         response.raise_for_status()
         holidays = response.json()
 
-    # Parse the response and extract the public holidays; used for extended holidays
-    holidays = []
+    # Parse the response and extract the global public holidays
+    result = []
     for holiday in holidays:
-        holidays.append(
-            {
-                "name": holiday["name"],
-                "date": holiday["date"],
-            }
-        )
-    return holidays
+        if holiday.get("global", False):
+            result.append(
+                {
+                    "name": holiday["name"],
+                    "date": holiday["date"],
+                }
+            )
+    return result
