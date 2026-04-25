@@ -17,7 +17,7 @@ def test_score_window_basic():
 def test_score_window_weekend_is_free():
     start = date(
         2026, 6, 5
-    )  # Friday — Sat/Sun are free, so 2 PTO days yields 4 days off
+    )  # starts on a Friday; the weekend adds free days so 2 PTO days yields 4 days off
     result = _score_window(start, 2, set())
     assert result is not None
     assert result["pto_days_used"] == 2
@@ -39,6 +39,7 @@ def test_score_window_yield_score():
     assert math.isclose(result["yield_score"], 2.0)
 
 
+# Helper function to make the state for the planner tests
 def _make_state(preferred_months=None):
     return {
         "request": TripPlannerRequest(

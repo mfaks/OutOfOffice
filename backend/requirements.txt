@@ -14,4 +14,3 @@ langgraph
 langgraph-checkpoint-redis
 slowapi
 redis
-prometheus-fastapi-instrumentator

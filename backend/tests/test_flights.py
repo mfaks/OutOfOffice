@@ -52,6 +52,7 @@ MOCK_RETURN_RESPONSE = {
 }
 
 
+# Helper function to mock the outbound and return responses
 def _mock_both():
     call_count = {"n": 0}
     responses = [MOCK_OUTBOUND_RESPONSE, MOCK_RETURN_RESPONSE]
@@ -64,6 +65,7 @@ def _mock_both():
     return respx.get("https://serpapi.com/search").mock(side_effect=_side_effect)
 
 
+# Check if the search flights function returns the flights sorted by price
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_flights_returns_sorted_by_price():
@@ -81,6 +83,7 @@ async def test_search_flights_returns_sorted_by_price():
     assert results[1]["estimated_flight_cost"] == 570  # 370 + 200
 
 
+# Check if the search flights function returns the flights with the correct shape
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_flights_result_shape():
@@ -102,6 +105,7 @@ async def test_search_flights_result_shape():
     assert flight["return_arrives_at"] == "2026-06-08 17:30"
 
 
+# Check if the search flights function returns the flights with the correct shape
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_flights_budget_filter():
@@ -119,6 +123,7 @@ async def test_search_flights_budget_filter():
     assert results[0]["estimated_flight_cost"] == 450
 
 
+# Check if the search flights function returns the flights with the correct shape
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_flights_counts_layovers():
@@ -134,6 +139,7 @@ async def test_search_flights_counts_layovers():
     assert results[1]["layovers"] == 1
 
 
+# Check if the search flights function raises an error if the HTTP error is 500
 @pytest.mark.asyncio
 @respx.mock
 async def test_search_flights_http_error_raises():
