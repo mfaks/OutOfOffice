@@ -1,50 +1,23 @@
 # OutOfOffice
 
-AI agent-powered platform for optimizing PTO and vacation planning. Provide your available days off, destination preferences, and remaining PTO; a multi-agent pipeline built on LangGraph finds and ranks the best trips.
+Platform for optimizing PTO and vacation planning. Provide available days off, destination preferences, remaining PTO, and a multi-agent pipeline built on LangGraph finds and ranks the best trips.
+
+> See [App Preview](#app-preview) at the bottom for a look at the app.
 
 ## Features
 
 - **PTO yield optimization**: finds trip windows that maximize total days off by bridging weekends and public holidays around your PTO days
 - **Multi-agent pipeline**: LangGraph orchestrates planner, travel search, ranker, itinerary, and feedback agents with Redis-persisted state between steps
-- **Flight search**: fetches real flight options with the SerpAPI and filters by a configurable budget
+- **Flight search**: fetches real flight options with SerpAPI, filtered by a configurable budget
 - **Smart ranking**: sort results by best yield, lowest cost, most time off, or fewest PTO days used
-- **Iterative refinement**: submit feedback on results and the pipeline re-plans without losing conversation state
+- **Iterative refinement**: submit feedback and the pipeline re-plans without losing conversation state
 - **Company holiday awareness**: mark company holidays so they count as free days in the optimizer
 - **Preferred month filtering**: constrain the search to specific months of the year
-
-  
-## Pictures
-
-### Initial Search
-
-<p align="center">
-  <img width="565" alt="Trip Form" src="https://github.com/user-attachments/assets/06edb6ff-42b4-48c5-951f-1bb50c206343" />
-</p>
-
-<p align="center">
-  <img width="844" alt="Initial Results" src="https://github.com/user-attachments/assets/55454c15-b9aa-46d5-b90a-0c0db255e897" />
-</p>
-
-### Expanded Trip Details
-
-<p align="center">
-  <img width="900" alt="Expanded Itinerary" src="https://github.com/user-attachments/assets/627daa4e-dcb1-4fa8-80d8-79b98a164836" />
-</p>
-
-### Feedback and Refined Results
-
-<p align="center">
-  <img width="650" alt="Feedback Option" src="https://github.com/user-attachments/assets/92c52833-13d8-47e7-95cf-b5e915de6abf" />
-</p>
-
-<p align="center">
-  <img width="650" alt="Feedback Results" src="https://github.com/user-attachments/assets/4c8345a4-daee-40b3-8962-3162fa4c6e80" />
-</p>
 
 ## Project Architecture
 
 ```text
-Browser (React + Vite + shadcn/ui)
+Browser (React 19 + Vite + shadcn/ui)
     │
     └── HTTP ──────────────► backend :8000  (FastAPI)
                                  │
@@ -58,7 +31,7 @@ Browser (React + Vite + shadcn/ui)
 | frontend | 5173 | React SPA — or S3+CloudFront in production                |
 | redis    | 6379 | LangGraph checkpoint store (agent state between pipeline) |
 
-On AWS it looks like this:
+On AWS:
 
 ```text
   Browser ──── HTTPS ────► CloudFront
@@ -92,7 +65,7 @@ docker compose up
 
 The backend runs as a Docker container on a single EC2 instance. The frontend is a static build served via S3+CloudFront. Budget roughly **$15–20/month** (t3.small + S3/CloudFront).
 
-You'll need Terraform >= 1.9, AWS CLI >= 2, and Docker. Your AWS credentials need permission to create EC2, ECR, S3, CloudFront, and IAM resources.
+You'll need Terraform >= 1.9, AWS CLI >= 2, and Docker with permissions to create EC2, ECR, S3, CloudFront, and IAM resources.
 
 ```bash
 aws configure               # key, secret, region
@@ -101,21 +74,19 @@ aws sts get-caller-identity # confirm it's working
 
 ### Step 0 — create a tfvars file
 
-Instead of passing `-var` flags on every command, create `terraform/terraform.tfvars`:
+Create `terraform/terraform.tfvars` (git-ignored):
 
 ```hcl
 serpapi_api_key = "sk-..."
 openai_api_key  = "sk-..."
 ```
 
-`terraform.tfvars` is git-ignored. Once it exists you can drop the `-var` flags from every command below.
-
 ### Step 1 — push the backend image
 
 ```bash
 cd terraform && terraform init
 
-# Create the ECR repo first so we have somewhere to push
+# Create the ECR repo first
 terraform apply -target=aws_ecr_repository.backend
 
 TAG=$(git rev-parse --short HEAD)
@@ -134,11 +105,9 @@ docker push $ECR_URL:$TAG
 terraform apply -var="image_tag=$TAG"
 ```
 
-Terraform creates the VPC, EC2 instance, S3 bucket, and CloudFront distribution. The EC2 user data script pulls the backend image from ECR and starts Redis and the backend as Docker containers on boot.
+Terraform creates the VPC, EC2 instance, S3 bucket, and CloudFront distribution. EC2 user data pulls the backend image from ECR and starts Redis and the backend as Docker containers on boot.
 
 ### Step 3 — build and upload the frontend
-
-The frontend calls the API via CloudFront (`/api/*`), so bake in the CloudFront URL — not the EC2 URL directly.
 
 ```bash
 CF_URL=$(cd terraform && terraform output -raw cloudfront_url)
@@ -149,7 +118,7 @@ VITE_API_BASE_URL=$CF_URL npm run build
 
 aws s3 sync dist/ s3://$S3_BUCKET --delete
 
-# Invalidate CloudFront so users get the new build immediately
+# Invalidate CloudFront cache
 aws cloudfront create-invalidation \
   --distribution-id $(cd ../terraform && terraform output -raw cloudfront_url | cut -d/ -f3 | cut -d. -f1) \
   --paths "/*"
@@ -157,10 +126,10 @@ aws cloudfront create-invalidation \
 
 ### Step 4 — access
 
-| Surface  | How                                                           |
-|----------|---------------------------------------------------------------|
-| Frontend | `cloudfront_url` from Terraform output                        |
-| API      | `cloudfront_url/api/*` routed to EC2 by CloudFront          |
+| Surface    | How                                                         |
+|------------|-------------------------------------------------------------|
+| Frontend   | `cloudfront_url` from Terraform output                      |
+| API        | `cloudfront_url/api/*` routed to EC2 by CloudFront          |
 | EC2 direct | `backend_url` from Terraform output (SSH/debugging only)    |
 
 ### Deploying an update
@@ -172,7 +141,6 @@ ECR_URL=$(cd terraform && terraform output -raw ecr_backend_url)
 docker build -f backend/Dockerfile -t $ECR_URL:$TAG ./backend
 docker push $ECR_URL:$TAG
 
-# Re-apply to update the user data and replace the instance
 cd terraform && terraform apply -var="image_tag=$TAG"
 ```
 
@@ -195,22 +163,44 @@ terraform destroy -var="image_tag=$TAG"
 | `REDIS_URL`         | Redis connection string (e.g. `redis://redis:6379`)                |
 | `CORS_ORIGINS`      | Comma-separated allowed origins for the CORS middleware            |
 | `VITE_API_BASE_URL` | Backend URL for the frontend (defaults to `http://localhost:8000`) |
+
 ---
 
 ## Architecture Design Decisions
 
-The primary goal of this deployment was to get practice with provisioning and deploying a full-stack application with Terraform on AWS. The application is not running live due to hosting costs, and architecture decisions were made to design the deployment in a way that balanced cost and functionality over production best practices.
+This deployment was built to practice provisioning a full-stack app with Terraform on AWS. The app is not running live due to hosting costs; decisions favor cost and simplicity over production best practices.
 
-**Redis for agent state** — Redis is used as the LangGraph checkpoint store rather than LangGraph's in-memory `MemorySaver`. `MemorySaver` is process-local and lost on every restart; Redis survives container restarts and allows the feedback agent to resume mid-conversation state without re-running the full pipeline.
+- **Redis for agent state** — Redis persists LangGraph checkpoints across container restarts. `MemorySaver` is process-local and would lose conversation state on every restart; Redis lets the feedback agent resume mid-conversation without re-running the full pipeline.
+- **Single EC2 instance** — Redis and the backend share one t3.small on a Docker bridge network (`outofoffice`), keeping Redis off the internet entirely.
+- **No NAT gateway** — the instance sits in a public subnet and reaches ECR/AWS APIs directly, avoiding NAT gateway costs.
+- **ECR lifecycle policy** — retains the 3 most recent images for one-step rollback without accumulating storage costs.
+- **S3 + CloudFront with OAC** — OAC is the current AWS-recommended way to grant CloudFront read access to a private S3 bucket. Custom error rules rewrite 403/404 to `index.html` so React Router handles deep links.
+- **CloudFront `/api/*` routing** — the frontend routes all API calls through CloudFront instead of directly to EC2, avoiding mixed-content blocks. The `/api/*` cache behavior proxies to EC2 port 8000 with caching disabled so responses are never served stale.
 
-**Single EC2 instance** — Redis and the backend run as Docker containers on one t3.small. They share a Docker bridge network (`outofoffice`) so Redis is never exposed to the internet.
+---
 
-**No NAT gateway** — the instance sits in a public subnet with a public IP, reaching ECR and AWS APIs directly.
+## App Preview
 
-**ECR lifecycle policy** — keeps the 3 most recent images so you can roll back once after a bad deploy without accumulating storage costs.
+<p align="center">
+  <img width="565" alt="Trip Form" src="https://github.com/user-attachments/assets/06edb6ff-42b4-48c5-951f-1bb50c206343" />
+</p>
 
-**S3 + CloudFront with OAC** — OAC is the current recommended way to give CloudFront read access to a private S3 bucket. The `custom_error_response` rules rewrite 403/404 to `index.html` so React Router handles deep links correctly.
+<p align="center">
+  <img width="844" alt="Initial Results" src="https://github.com/user-attachments/assets/55454c15-b9aa-46d5-b90a-0c0db255e897" />
+</p>
 
-**CloudFront `/api/*` routing** — rather than calling EC2 directly (which would be plain HTTP and blocked by browsers as mixed content), the frontend sends all API requests to CloudFront. An `ordered_cache_behavior` for `/api/*` proxies those requests to EC2 port 8000 over HTTP internally. CloudFront handles HTTPS end-to-end so the browser only ever sees a secure connection. Caching is disabled on this behavior so API responses are never served stale.
+### Expanded Trip Details
 
-**Git SHA tags** — passing `image_tag=$(git rev-parse --short HEAD)` at apply time means every deploy maps to a real pullable image.
+<p align="center">
+  <img width="900" alt="Expanded Itinerary" src="https://github.com/user-attachments/assets/627daa4e-dcb1-4fa8-80d8-79b98a164836" />
+</p>
+
+### Feedback and Refined Results
+
+<p align="center">
+  <img width="650" alt="Feedback Option" src="https://github.com/user-attachments/assets/92c52833-13d8-47e7-95cf-b5e915de6abf" />
+</p>
+
+<p align="center">
+  <img width="650" alt="Feedback Results" src="https://github.com/user-attachments/assets/4c8345a4-daee-40b3-8962-3162fa4c6e80" />
+</p>
