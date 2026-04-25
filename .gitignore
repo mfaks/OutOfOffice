@@ -1,13 +1,18 @@
 # Environment
 .env
 
-# Claude
-.claude/settings.local.json
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+terraform.tfvars
+crash.log
 
 # Python
 .venv
 __pycache__
-.pytestcache
+.pytest_cache
 .ruff_cache
 *.pyc
 
