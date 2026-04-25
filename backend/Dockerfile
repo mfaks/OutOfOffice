@@ -4,10 +4,10 @@ RUN useradd --create-home appuser
 
 WORKDIR /app
 
-COPY --chown=appuser:appuser requirements.txt ./
+COPY --chmod=644 requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY --chown=appuser:appuser . .
+COPY --chmod=755 . .
 
 USER appuser
 

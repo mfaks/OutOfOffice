@@ -1,8 +1,42 @@
+# Receives access logs from both the frontend S3 bucket and CloudFront distribution
+resource "aws_s3_bucket" "logs" {
+    bucket        = "${var.project_name}-logs-${data.aws_caller_identity.current.account_id}"
+    force_destroy = true
+    tags          = { Name = "${var.project_name}-logs" }
+}
+
+resource "aws_s3_bucket_public_access_block" "logs" {
+    bucket                  = aws_s3_bucket.logs.id
+    block_public_acls       = true
+    block_public_policy     = true
+    ignore_public_acls      = true
+    restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "logs" {
+    bucket = aws_s3_bucket.logs.id
+    rule {
+        object_ownership = "BucketOwnerPreferred"
+    }
+}
+
+resource "aws_s3_bucket_acl" "logs" {
+    depends_on = [aws_s3_bucket_ownership_controls.logs]
+    bucket     = aws_s3_bucket.logs.id
+    acl        = "log-delivery-write"
+}
+
 # Account ID suffix guarantees a globally unique bucket name
 resource "aws_s3_bucket" "frontend" {
     bucket        = "${var.project_name}-frontend-${data.aws_caller_identity.current.account_id}"
     force_destroy = true
     tags          = { Name = "${var.project_name}-frontend" }
+}
+
+resource "aws_s3_bucket_logging" "frontend" {
+    bucket        = aws_s3_bucket.frontend.id
+    target_bucket = aws_s3_bucket.logs.id
+    target_prefix = "s3/"
 }
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
@@ -25,6 +59,12 @@ resource "aws_cloudfront_distribution" "frontend" {
     enabled             = true
     default_root_object = "index.html"
     wait_for_deployment = false
+
+    logging_config {
+        bucket          = aws_s3_bucket.logs.bucket_regional_domain_name
+        prefix          = "cf/"
+        include_cookies = false
+    }
 
     origin {
         domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name

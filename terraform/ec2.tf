@@ -49,11 +49,12 @@ data "aws_ami" "amazon_linux" {
 }
 
 resource "aws_instance" "backend" {
-    ami                    = data.aws_ami.amazon_linux.id
-    instance_type          = var.instance_type
-    subnet_id              = aws_subnet.public.id
-    vpc_security_group_ids = [aws_security_group.backend.id]
-    iam_instance_profile   = aws_iam_instance_profile.backend.name
+    ami                         = data.aws_ami.amazon_linux.id
+    instance_type               = var.instance_type
+    subnet_id                   = aws_subnet.public.id
+    vpc_security_group_ids      = [aws_security_group.backend.id]
+    iam_instance_profile        = aws_iam_instance_profile.backend.name
+    associate_public_ip_address = true
 
     # User data script to run on boot
     user_data = base64encode(templatefile("${path.module}/userdata.sh.tpl", {
