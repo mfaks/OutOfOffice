@@ -96,7 +96,7 @@ aws configure               # key, secret, region
 aws sts get-caller-identity # confirm it's working
 ```
 
-### Step 0 — create a tfvars file
+### Step 0: create a tfvars file
 
 Create `terraform/terraform.tfvars` (git-ignored):
 
@@ -105,7 +105,7 @@ serpapi_api_key = "sk-..."
 openai_api_key  = "sk-..."
 ```
 
-### Step 1 — push the backend image
+### Step 1: push the backend image
 
 ```bash
 cd terraform && terraform init
@@ -123,7 +123,7 @@ docker build -f ../backend/Dockerfile -t $ECR_URL:$TAG ../backend
 docker push $ECR_URL:$TAG
 ```
 
-### Step 2 — provision everything
+### Step 2: provisioning
 
 ```bash
 terraform apply -var="image_tag=$TAG"
@@ -131,7 +131,7 @@ terraform apply -var="image_tag=$TAG"
 
 Terraform creates the VPC, EC2 instance, S3 bucket, and CloudFront distribution. EC2 user data pulls the backend image from ECR and starts Redis and the backend as Docker containers on boot.
 
-### Step 3 — build and upload the frontend
+### Step 3: build and upload the frontend
 
 ```bash
 CF_URL=$(cd terraform && terraform output -raw cloudfront_url)
@@ -148,7 +148,7 @@ aws cloudfront create-invalidation \
   --paths "/*"
 ```
 
-### Step 4 — access
+### Step 4: access
 
 | Surface    | How                                                         |
 |------------|-------------------------------------------------------------|
@@ -192,14 +192,14 @@ terraform destroy -var="image_tag=$TAG"
 
 ## Architecture Design Decisions
 
-This deployment was built to practice provisioning a full-stack app with Terraform on AWS. The app is not running live due to hosting costs; decisions favor cost and simplicity over production best practices.
+This deployment was built to practice provisioning a full stack app with Terraform on AWS. The app is not running live due to hosting costs; decisions favor cost and simplicity over production best practices.
 
-- **Redis for agent state** — Redis persists LangGraph checkpoints across container restarts. `MemorySaver` is process-local and would lose conversation state on every restart; Redis lets the feedback agent resume mid-conversation without re-running the full pipeline.
-- **Single EC2 instance** — Redis and the backend share one t3.small on a Docker bridge network (`outofoffice`), keeping Redis off the internet entirely.
-- **No NAT gateway** — the instance sits in a public subnet and reaches ECR/AWS APIs directly, avoiding NAT gateway costs.
-- **ECR lifecycle policy** — retains the 3 most recent images for one-step rollback without accumulating storage costs.
-- **S3 + CloudFront with OAC** — OAC is the current recommended way to grant CloudFront read access to a private S3 bucket. Custom error rules rewrite 403/404 to `index.html` so React Router handles deep links.
-- **CloudFront `/api/*` routing** — the frontend routes all API calls through CloudFront instead of directly to EC2, avoiding mixed-content blocks. The `/api/*` cache behavior proxies to EC2 port 8000 with caching disabled so responses are never served stale.
+- **Redis for agent state**: Redis persists LangGraph checkpoints across container restarts. `MemorySaver` is process-local and would lose conversation state on every restart; Redis lets the feedback agent resume mid-conversation without re-running the full pipeline.
+- **Single EC2 instance**: Redis and the backend share one t3.small on a Docker bridge network (`outofoffice`), keeping Redis off the internet entirely.
+- **No NAT gateway**: the instance sits in a public subnet and reaches ECR/AWS APIs directly, avoiding NAT gateway costs.
+- **ECR lifecycle policy**: retains the 3 most recent images for rollback in one step without accumulating storage costs.
+- **S3 + CloudFront with OAC**: OAC is the current recommended way to grant CloudFront read access to a private S3 bucket. Custom error rules rewrite 403/404 to `index.html` so React Router handles deep links.
+- **CloudFront `/api/*` routing**: the frontend routes all API calls through CloudFront instead of directly to EC2, avoiding mixed-content blocks. The `/api/*` cache behavior proxies to EC2 port 8000 with caching disabled so responses are never served stale.
 
 ---
 
