@@ -3,12 +3,13 @@ import { Link } from 'react-router';
 import { useTheme } from './ThemeProvider';
 import { Button } from './ui/button';
 
+// Render the sticky top navigation bar with the logo and a theme toggle
 function Navbar() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/90 backdrop-blur-md">
-      <div className="flex h-16 w-full items-center justify-between px-6">
+    <header className="sticky top-0 z-40 border-b border-border bg-background shadow-sm">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-6">
         <Link
           to="/"
           className="flex items-center gap-2.5 transition-opacity hover:opacity-80"

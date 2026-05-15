@@ -3,6 +3,7 @@ import Home from './components/Home';
 import Layout from './components/Layout';
 import Results from './components/Results';
 
+// Define the client-side route tree with a shared layout wrapping home and results
 function App() {
   return (
     <Routes>

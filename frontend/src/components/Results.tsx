@@ -21,6 +21,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
+// Return a sorted copy of the recommendations by the given key
 function sortRecs(
   recs: TripRecommendation[],
   key: SortKey,
@@ -49,6 +50,7 @@ function sortRecs(
   return sorted;
 }
 
+// Show ranked trip recommendations and let the user sort or refine them with feedback
 function Results() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -75,6 +77,7 @@ function Results() {
 
   const { request } = response;
 
+  // Submit feedback to the API and replace the current recommendations in place
   async function handleRefine() {
     if (!feedback.trim() || !threadId) return;
     setRefining(true);

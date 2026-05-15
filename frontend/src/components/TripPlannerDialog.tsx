@@ -61,6 +61,7 @@ const MONTHS = [
   'Dec',
 ];
 
+// Render a dialog to collect trip parameters and submit them to the planning API
 export function TripPlannerDialog({
   triggerClassName,
   triggerLabel = '✈️ Get Started',
@@ -80,6 +81,7 @@ export function TripPlannerDialog({
   const [isPending, setIsPending] = useState(false);
   const [isError, setIsError] = useState(false);
 
+  // Validate the form, post to the trip API, and navigate to the results page
   async function handleSubmit() {
     if (!departure.trim() || !destination.trim() || !pto) return;
     const body: TripPlannerRequest = {

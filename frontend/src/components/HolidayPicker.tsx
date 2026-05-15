@@ -5,6 +5,7 @@ import { Calendar } from './ui/calendar';
 import { Label } from './ui/label';
 import { TypographySmall } from './ui/typography';
 
+// Find the nth occurrence of a weekday within a given month
 function nthWeekday(
   year: number,
   month: number,
@@ -16,12 +17,14 @@ function nthWeekday(
   return new Date(year, month, 1 + first + (n - 1) * 7);
 }
 
+// Find the last occurrence of a weekday within a given month
 function lastWeekday(year: number, month: number, weekday: number): Date {
   const d = new Date(year, month + 1, 0);
   const diff = (d.getDay() - weekday + 7) % 7;
   return new Date(year, month, d.getDate() - diff);
 }
 
+// Return the dates of all US federal holidays for the given year
 function getFederalHolidays(year: number): { name: string; date: Date }[] {
   return [
     { name: "New Year's Day", date: new Date(year, 0, 1) },
@@ -39,6 +42,7 @@ function getFederalHolidays(year: number): { name: string; date: Date }[] {
   ];
 }
 
+// Render a removable pill displaying a single holiday date
 function HolidayChip({
   date,
   onRemove,
@@ -65,6 +69,7 @@ export interface HolidayPickerProps {
   readonly onChange: (holidays: Date[]) => void;
 }
 
+// Let the user select company holidays from a calendar or a list of US federal holidays
 export function HolidayPicker({
   holidays,
   onChange,

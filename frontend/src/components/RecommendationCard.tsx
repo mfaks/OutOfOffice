@@ -67,6 +67,7 @@ const RANK_CONFIG: Record<number, RankConfig> = {
   },
 };
 
+// Display one ranked trip with flight details, stats, reasoning, and an expandable itinerary
 export function RecommendationCard({
   rec,
   searchUrl,
@@ -303,6 +304,7 @@ export function RecommendationCard({
   );
 }
 
+// Render a small icon and label pill for a single trip stat
 function StatPill({ icon, children, pillBg }: StatPillProps) {
   return (
     <span

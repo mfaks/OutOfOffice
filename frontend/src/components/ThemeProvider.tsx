@@ -17,6 +17,7 @@ const ThemeContext = createContext<{
   toggleTheme: () => {},
 });
 
+// Sync theme state with localStorage and the OS color scheme preference
 export function ThemeProvider({
   children,
 }: {
@@ -56,6 +57,7 @@ export function ThemeProvider({
   );
 }
 
+// Expose the current theme and toggle from ThemeContext
 // eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   return useContext(ThemeContext);

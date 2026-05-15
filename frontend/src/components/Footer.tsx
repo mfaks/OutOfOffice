@@ -1,7 +1,8 @@
+// Render the page footer with the copyright notice and a GitHub link
 function Footer() {
   return (
     <footer className="border-t border-border/60 bg-card/50">
-      <div className="flex h-14 w-full items-center justify-between px-6">
+      <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-6">
         <p className="text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} OutOfOffice.
         </p>
