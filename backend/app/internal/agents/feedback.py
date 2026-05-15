@@ -7,10 +7,8 @@ from langchain_openai import ChatOpenAI
 from app.config import settings
 from app.schemas.trip import TripState
 
-# Model to use for the feedback agent if user wants to refine the results of the trip planner
 _MODEL = "gpt-4o"
 
-# Prompt for the feedback agent to refine the results of the trip planner
 INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
@@ -47,19 +45,16 @@ INTERPRETER_PROMPT = ChatPromptTemplate.from_messages(
 )
 
 
-# Feedback agent to refine the results of the trip planner
+# Translate user feedback into updated trip constraints and clear the feedback flag
 async def feedback_node(state: TripState) -> dict:
 
-    # Get the user feedback from the state
     feedback = state.get("user_feedback")
     if not feedback:
         return {}
 
-    # Create the chain for the feedback agent
     llm = ChatOpenAI(model=_MODEL, api_key=settings.openai_api_key)
     chain = INTERPRETER_PROMPT | llm | JsonOutputParser()
 
-    # Invoke the chain to get the adjustments
     adjustments: dict = await chain.ainvoke(
         {
             "request": json.dumps(state["request"].model_dump()),
@@ -67,10 +62,8 @@ async def feedback_node(state: TripState) -> dict:
         }
     )
 
-    # Create the updated request by merging the original request with the adjustments
     updated_request = state["request"].model_copy(update=adjustments)
 
-    # Return the updated request and the user feedback
     return {
         "request": updated_request,
         "user_feedback": None,

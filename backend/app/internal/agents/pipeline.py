@@ -8,27 +8,25 @@ from app.internal.agents.ranker import ranker_node
 from app.internal.agents.travel import travel_node
 from app.schemas.trip import TripState
 
-# planner -> travel: always run travel after planner
-# travel -> ranker: only if travel produced enriched windows (flights found), else END
-# ranker -> itinerary: only if ranker produced recommendations, else END
-# Graph pauses after itinerary (interrupt_after). On resume:
-#   - if user_feedback is set: feedback -> planner (loop with updated constraints)
-#   - else: END
-# This ensures refine resumes from the pause point rather than restarting the full pipeline.
+# graph pauses after itinerary so feedback resumes mid-pipeline rather than rerunning from scratch
 
 
+# Route to the ranker if enriched windows exist, otherwise end the pipeline
 def _should_rank(state: TripState) -> str:
     return "ranker" if state.get("enriched_windows") else END
 
 
+# Route to the itinerary builder if recommendations were produced, otherwise end
 def _should_build_itinerary(state: TripState) -> str:
     return "itinerary" if state.get("recommendations") else END
 
 
+# Route to the feedback node when user feedback is present, otherwise end
 def _should_refine(state: TripState) -> str:
     return "feedback" if state.get("user_feedback") else END
 
 
+# Wire all agent nodes together and compile the graph with checkpointing and an interrupt after itinerary
 def build_graph(checkpointer: BaseCheckpointSaver):
     g = StateGraph(TripState)
 

@@ -4,7 +4,7 @@ from starlette.requests import Request
 from app.config import settings
 
 
-# Help function for the rate limiter to get the real client IP; CloudFront forwards the original client IP in X-Forwarded-For; fall back to the direct connection IP
+# Read the forwarded for header when present and fall back to the direct connection address
 def _real_ip(request: Request) -> str:
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
@@ -12,5 +12,5 @@ def _real_ip(request: Request) -> str:
     return request.client.host
 
 
-# Rate limiter for the API using Redis for storage; uses the real client IP as the key (see _real_ip)
+# redis backed so rate limits survive restarts and work across multiple workers
 limiter = Limiter(key_func=_real_ip, storage_uri=settings.redis_url)

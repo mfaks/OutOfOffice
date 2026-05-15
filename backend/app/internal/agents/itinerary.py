@@ -7,10 +7,8 @@ from langchain_openai import ChatOpenAI
 from app.config import settings
 from app.schemas.trip import DayItinerary, TripRecommendation, TripState
 
-# Model to use for the itinerary agent to generate the itinerary for the trip
 _MODEL = "gpt-4o"
 
-# Prompt for the itinerary agent to generate the itinerary for the trip
 ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
@@ -60,7 +58,7 @@ ITINERARY_PROMPT = ChatPromptTemplate.from_messages(
 )
 
 
-# Helper function to build the itinerary for the trip
+# Call the LLM with flight times to produce a day-by-day itinerary for one recommendation
 async def _build_itinerary(
     chain, request, rec: TripRecommendation
 ) -> TripRecommendation:
@@ -77,25 +75,21 @@ async def _build_itinerary(
         }
     )
     itinerary = []
-    # Validate the days and add them to the itinerary
     for d in days:
         itinerary.append(DayItinerary.model_validate(d))
 
-    # Return the updated recommendation with the itinerary
     return rec.model_copy(update={"itinerary": itinerary})
 
 
+# Build day-by-day itineraries for all recommendations in parallel
 async def itinerary_node(state: TripState) -> dict:
     recommendations = state["recommendations"]
     request = state["request"]
     llm = ChatOpenAI(model=_MODEL, api_key=settings.openai_api_key)
     chain = ITINERARY_PROMPT | llm | JsonOutputParser()
 
-    # Build the itinerary for each recommendation using coroutines to run in parallel
     tasks = map(lambda rec: _build_itinerary(chain, request, rec), recommendations)
 
-    # Run the tasks in parallel and gather the results
     enriched = await asyncio.gather(*tasks)
 
-    # Return the updated recommendations with the itinerary
     return {"recommendations": list(enriched)}

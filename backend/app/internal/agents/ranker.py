@@ -7,10 +7,8 @@ from langchain_openai import ChatOpenAI
 from app.config import settings
 from app.schemas.trip import TripRecommendation, TripState
 
-# Model to use for the ranker agent to rank the candidate windows
 _MODEL = "gpt-4o"
 
-# Instructions for the ranker agent to rank the candidate windows
 PRIORITY_INSTRUCTIONS = {
     "best_yield": (
         "PRIMARY goal: maximize yield_score (most total days off per PTO day used). "
@@ -30,7 +28,6 @@ PRIORITY_INSTRUCTIONS = {
     ),
 }
 
-# Prompt for the ranker agent to rank the candidate windows
 RANKER_PROMPT = ChatPromptTemplate.from_messages(
     [
         (
@@ -67,7 +64,7 @@ RANKER_PROMPT = ChatPromptTemplate.from_messages(
 )
 
 
-# Ranker agent to rank the candidate windows
+# Invoke the LLM to rank enriched flight windows according to the user priority
 async def ranker_node(state: TripState) -> dict:
     request = state["request"]
     enriched_windows = state["enriched_windows"]

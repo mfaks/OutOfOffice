@@ -12,7 +12,7 @@ from app.internal.agents.pipeline import build_graph
 from app.routers import health, trip
 
 
-# Lifespan to initialize the Redis checkpoint saver and the graph
+# Connect the Redis checkpoint saver and compile the agent graph
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with AsyncRedisSaver.from_conn_string(settings.redis_url) as checkpointer:
@@ -23,17 +23,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# Add the rate limiter to the app state
 app.state.limiter = limiter
 
-# Add the exception handler for rate limit exceeded to the app
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(health.router)
 app.include_router(trip.router, prefix="/api")
 
 
-# CORS_ORIGINS is a comma-separated list so multiple origins can be allowed without changing code (e.g. localhost for dev, CloudFront for prod).
+# comma separated so multiple origins work across environments without code changes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins.split(","),
