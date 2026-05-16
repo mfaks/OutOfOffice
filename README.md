@@ -1,56 +1,94 @@
 # OutOfOffice
 
-AI agent-powered platform for optimizing PTO and vacation planning. Provide your available days off, destination preferences, and remaining PTO; a multi-agent pipeline built on LangGraph finds and ranks the best trips.
+AI-powered trip planner that finds where your PTO goes furthest. Enter your days off, destination, and budget. OutOfOffice scores every possible window, prices real flights, and returns ranked itineraries you can book in one click.
 
-## Features
+## Preview
 
-- **PTO yield optimization**: finds trip windows that maximize total days off by bridging weekends and public holidays around your PTO days
-- **Multi-agent pipeline**: LangGraph orchestrates planner, travel search, ranker, itinerary, and feedback agents with Redis-persisted state between steps
-- **Flight search**: fetches real flight options with the SerpAPI and filters by a configurable budget
-- **Smart ranking**: sort results by best yield, lowest cost, most time off, or fewest PTO days used
-- **Iterative refinement**: submit feedback on results and the pipeline re-plans without losing conversation state
-- **Company holiday awareness**: mark company holidays so they count as free days in the optimizer
-- **Preferred month filtering**: constrain the search to specific months of the year
+| Trip Planner | Results | Expanded Trip | Refine Results |
+|:---:|:---:|:---:|:---:|
+| ![Trip Planner](https://github.com/user-attachments/assets/06edb6ff-42b4-48c5-951f-1bb50c206343) | ![Results](https://github.com/user-attachments/assets/55454c15-b9aa-46d5-b90a-0c0db255e897) | ![Expanded Itinerary](https://github.com/user-attachments/assets/627daa4e-dcb1-4fa8-80d8-79b98a164836) | ![Refined Results](https://github.com/user-attachments/assets/92c52833-13d8-47e7-95cf-b5e915de6abf) |
 
-## Pictures
+## Tech Stack
 
-## Project Architecture
+**Frontend**
 
-```text
-Browser (React 19 + Vite + shadcn/ui)
-    │
-    └── HTTP ──────────────► backend :8000  (FastAPI)
-                                 │
-                           redis :6379
-                     (LangGraph checkpoints)
+![React](https://img.shields.io/badge/React_19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB) ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white) ![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-000000?style=for-the-badge&logo=shadcnui&logoColor=white) ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+
+**Backend**
+
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white) ![Python](https://img.shields.io/badge/Python_3.12-3776AB?style=for-the-badge&logo=python&logoColor=white) ![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white) ![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white) ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+
+**Infrastructure**
+
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white) ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+
+## How it works
+
+```mermaid
+flowchart TD
+    A([Open OutOfOffice]) --> B[Enter departure, destination,\nPTO days, and optional budget]
+    B --> C[Choose priority\nbest yield / lowest cost / most time / least PTO]
+    C --> D[Submit]
+    D --> E[View ranked recommendations\nwith real flight prices and itineraries]
+    E --> F{Satisfied?}
+    F -->|yes| G([Book on Kayak])
+    F -->|no| H[Type feedback\ne.g. cheaper flights or longer trip]
+    H --> I[Pipeline resumes from saved checkpoint\nno full rerun]
+    I --> E
 ```
 
-| Service  | Port | What it does                                              |
-|----------|------|-----------------------------------------------------------|
-| backend  | 8000 | FastAPI — agent pipeline, trip planning API               |
-| frontend | 5173 | React SPA — or S3+CloudFront in production                |
-| redis    | 6379 | LangGraph checkpoint store (agent state between pipeline) |
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant FastAPI
+    participant LangGraph
+    participant Redis
+    participant OpenAI
+    participant SerpAPI
+    participant NagerDate
 
-On AWS it looks like this:
+    Browser->>FastAPI: POST /api/trip
+    FastAPI->>LangGraph: ainvoke(initial_state)
+    LangGraph->>NagerDate: fetch public holidays for current and next year
+    LangGraph->>SerpAPI: search outbound + return flights per window in parallel
+    LangGraph->>OpenAI: rank enriched windows by priority (gpt-4o)
+    LangGraph->>OpenAI: build day-by-day itineraries in parallel (gpt-4o)
+    LangGraph->>Redis: save checkpoint and pause
+    FastAPI-->>Browser: TripPlannerResponse with thread_id and recommendations
 
-```text
-  Browser ──── HTTPS ────► CloudFront
-                                ├── /*      ──► S3 (static frontend build)
-                                └── /api/*  ──► EC2 t3.small :8000 (HTTP internally)
-                                                    ├── backend container  :8000
-                                                    └── redis container    :6379  (Docker bridge only)
-
-  ECR: outofoffice-backend
+    Browser->>FastAPI: POST /api/trips/{thread_id}/feedback
+    FastAPI->>Redis: load checkpoint
+    FastAPI->>LangGraph: ainvoke(None) to resume from pause point
+    LangGraph->>OpenAI: parse feedback into updated constraints (gpt-4o)
+    LangGraph->>SerpAPI: re-search flights with new constraints
+    LangGraph->>OpenAI: re-rank and rebuild itineraries
+    LangGraph->>Redis: save updated checkpoint and pause
+    FastAPI-->>Browser: updated TripPlannerResponse
 ```
 
----
+```mermaid
+flowchart TD
+    START([New request]) --> planner
+    planner["Planner\nScore every PTO window for the year by yield.\nFilter by preferred months and min PTO days."] --> travel
+    travel["Travel\nFetch outbound + return flights via SerpAPI.\n2 one-way calls per window, run in parallel."] --> rank_check{Flights found?}
+    rank_check -->|no| END1([End])
+    rank_check -->|yes| ranker
+    ranker["Ranker\nGPT-4o sorts windows by user priority.\nbest yield / lowest cost / most/least PTO"] --> rec_check{Recommendations\nproduced?}
+    rec_check -->|no| END2([End])
+    rec_check -->|yes| itinerary
+    itinerary["Itinerary\nGPT-4o builds a day-by-day plan\nper recommendation in parallel."] --> pause
+    pause([Interrupt -- full state saved to Redis]) --> feedback_check{User feedback\nsubmitted?}
+    feedback_check -->|no| END3([End -- return results])
+    feedback_check -->|yes| feedback
+    feedback["Feedback\nGPT-4o translates natural language\ninto updated request constraints."] --> planner
+```
 
-## Running locally with Docker Compose
+The backend is a FastAPI service orchestrating a five-node LangGraph state machine. `planner` scores every valid PTO window in the year by yield ratio (total days off divided by PTO used) and filters by the user's month and minimum-day preferences; `travel` fans out concurrent SerpAPI requests — two one-way calls per window, because SerpAPI has no round-trip endpoint — and attaches the cheapest pairing to each window; `ranker` sends enriched windows to GPT-4o for priority-aware ranking, and `itinerary` generates day-by-day plans in parallel for each recommendation. After `itinerary` completes, LangGraph pauses with `interrupt_after` and checkpoints the full graph state to Redis; the `/feedback` endpoint later loads that checkpoint and resumes execution from the pause point, so only `feedback -> planner -> ... -> itinerary` re-runs rather than the entire pipeline. Redis also backs the slowapi rate limiter, keeping both the checkpoint store and per-IP counters on a single external dependency.
 
-You'll need Docker, a SerpAPI key, and an OpenAI API key.
+## Running it locally
 
 ```bash
-cp .env.example .env   # fill in your credentials
+cp .env.example .env   # fill in SERPAPI_API_KEY and OPENAI_API_KEY
 docker compose up
 ```
 
@@ -59,131 +97,29 @@ docker compose up
 | Frontend | http://localhost:5173 |
 | Backend  | http://localhost:8000 |
 
----
-
-## Deploying to AWS
-
-The backend runs as a Docker container on a single EC2 instance. The frontend is a static build served via S3+CloudFront. Budget roughly **$15–20/month** (t3.small + S3/CloudFront).
-
-You'll need Terraform >= 1.9, AWS CLI >= 2, and Docker. Your AWS credentials need permission to create EC2, ECR, S3, CloudFront, and IAM resources.
+## Running tests
 
 ```bash
-aws configure               # key, secret, region
-aws sts get-caller-identity # confirm it's working
+# Backend
+cd backend
+python -m pytest
 ```
-
-### Step 0 — create a tfvars file
-
-Instead of passing `-var` flags on every command, create `terraform/terraform.tfvars`:
-
-```hcl
-serpapi_api_key = "sk-..."
-openai_api_key  = "sk-..."
-```
-
-`terraform.tfvars` is git-ignored. Once it exists you can drop the `-var` flags from every command below.
-
-### Step 1 — push the backend image
 
 ```bash
-cd terraform && terraform init
-
-# Create the ECR repo first so we have somewhere to push
-terraform apply -target=aws_ecr_repository.backend
-
-TAG=$(git rev-parse --short HEAD)
-ECR_URL=$(terraform output -raw ecr_backend_url)
-
-aws ecr get-login-password --region us-east-1 \
-  | docker login --username AWS --password-stdin $ECR_URL
-
-docker build -f ../backend/Dockerfile -t $ECR_URL:$TAG ../backend
-docker push $ECR_URL:$TAG
-```
-
-### Step 2 — provision everything
-
-```bash
-terraform apply -var="image_tag=$TAG"
-```
-
-Terraform creates the VPC, EC2 instance, S3 bucket, and CloudFront distribution. The EC2 user data script pulls the backend image from ECR and starts Redis and the backend as Docker containers on boot.
-
-### Step 3 — build and upload the frontend
-
-The frontend calls the API via CloudFront (`/api/*`), so bake in the CloudFront URL — not the EC2 URL directly.
-
-```bash
-CF_URL=$(cd terraform && terraform output -raw cloudfront_url)
-S3_BUCKET=$(cd terraform && terraform output -raw s3_bucket)
-
+# Frontend
 cd frontend
-VITE_API_BASE_URL=$CF_URL npm run build
-
-aws s3 sync dist/ s3://$S3_BUCKET --delete
-
-# Invalidate CloudFront so users get the new build immediately
-aws cloudfront create-invalidation \
-  --distribution-id $(cd ../terraform && terraform output -raw cloudfront_url | cut -d/ -f3 | cut -d. -f1) \
-  --paths "/*"
+npm test
 ```
 
-### Step 4 — access
+## Deploying
 
-| Surface  | How                                                           |
-|----------|---------------------------------------------------------------|
-| Frontend | `cloudfront_url` from Terraform output                        |
-| API      | `cloudfront_url/api/*` routed to EC2 by CloudFront          |
-| EC2 direct | `backend_url` from Terraform output (SSH/debugging only)    |
+The frontend deploys to Vercel and the backend to Render. Both auto-deploy on push to `main`.
 
-### Deploying an update
+**Frontend — Vercel**
+1. Import the repo; set root directory to `frontend/`
+2. Add environment variable: `VITE_API_BASE_URL` = your Render backend URL (set after step 2)
 
-```bash
-TAG=$(git rev-parse --short HEAD)
-ECR_URL=$(cd terraform && terraform output -raw ecr_backend_url)
-
-docker build -f backend/Dockerfile -t $ECR_URL:$TAG ./backend
-docker push $ECR_URL:$TAG
-
-# Re-apply to update the user data and replace the instance
-cd terraform && terraform apply -var="image_tag=$TAG"
-```
-
-### Tearing down
-
-```bash
-cd terraform
-aws s3 rm s3://$(terraform output -raw s3_bucket) --recursive
-terraform destroy -var="image_tag=$TAG"
-```
-
----
-
-## Environment variables
-
-| Variable            | Description                                                        |
-|---------------------|--------------------------------------------------------------------|
-| `SERPAPI_API_KEY`   | SerpAPI key used by the travel agent to search for trips           |
-| `OPENAI_API_KEY`    | OpenAI key used by LangGraph agents (GPT-4o by default)            |
-| `REDIS_URL`         | Redis connection string (e.g. `redis://redis:6379`)                |
-| `CORS_ORIGINS`      | Comma-separated allowed origins for the CORS middleware            |
-| `VITE_API_BASE_URL` | Backend URL for the frontend (defaults to `http://localhost:8000`) |
----
-
-## Architecture Design Decisions
-
-The primary goal of this deployment was to get practice with provisioning and deploying a full-stack application with Terraform on AWS. The application is not running live due to hosting costs, and architecture decisions were made to design the deployment in a way that balanced cost and functionality over production best practices.
-
-**Redis for agent state** — Redis is used as the LangGraph checkpoint store rather than LangGraph's in-memory `MemorySaver`. `MemorySaver` is process-local and lost on every restart; Redis survives container restarts and allows the feedback agent to resume mid-conversation state without re-running the full pipeline.
-
-**Single EC2 instance** — Redis and the backend run as Docker containers on one t3.small. They share a Docker bridge network (`outofoffice`) so Redis is never exposed to the internet.
-
-**No NAT gateway** — the instance sits in a public subnet with a public IP, reaching ECR and AWS APIs directly.
-
-**ECR lifecycle policy** — keeps the 3 most recent images so you can roll back once after a bad deploy without accumulating storage costs.
-
-**S3 + CloudFront with OAC** — OAC is the current recommended way to give CloudFront read access to a private S3 bucket. The `custom_error_response` rules rewrite 403/404 to `index.html` so React Router handles deep links correctly.
-
-**CloudFront `/api/*` routing** — rather than calling EC2 directly (which would be plain HTTP and blocked by browsers as mixed content), the frontend sends all API requests to CloudFront. An `ordered_cache_behavior` for `/api/*` proxies those requests to EC2 port 8000 over HTTP internally. CloudFront handles HTTPS end-to-end so the browser only ever sees a secure connection. Caching is disabled on this behavior so API responses are never served stale.
-
-**Git SHA tags** — passing `image_tag=$(git rev-parse --short HEAD)` at apply time means every deploy maps to a real pullable image.
+**Backend — Render**
+1. Create a Web Service; set root directory to `backend/`, Dockerfile path to `./Dockerfile`
+2. Create a Redis instance; copy its internal connection string to `REDIS_URL`
+3. Set environment variables: `OPENAI_API_KEY`, `SERPAPI_API_KEY`, `REDIS_URL`, `CORS_ORIGINS` (your Vercel URL)
